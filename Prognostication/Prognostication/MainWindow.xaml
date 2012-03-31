@@ -10,16 +10,16 @@
                     <StackPanel Orientation="Horizontal">
                         <Label Content="Количество промежутков времени [K]" Height="28" HorizontalAlignment="Left" Margin="10,10,0,0" Name="label1" VerticalAlignment="Top" />
                         <TextBox Height="23" HorizontalAlignment="Left" Margin="20,13,0,0" Name="KTextBox" VerticalAlignment="Top" Width="60" TextChanged="KTextBox_TextChanged" />
-                        <Button Content="Вычислить" Margin="50,13,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="50" Name="StartButton" Width="100" />
+                        <Button Content="Вычислить" Margin="50,13,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="50" Name="StartButton" Width="100" Click="StartButton_Click" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Label Content="Длина промежутка [dt]" Height="28" HorizontalAlignment="Left" Margin="10,40,0,0" Name="label2" VerticalAlignment="Top" />
-                        <TextBox Height="23" HorizontalAlignment="Left" Margin="104,43,0,0" Name="dtTextBox" VerticalAlignment="Top" Width="60" />
+                        <Label Content="Длина промежутка [dt] (в формате 0,0)" Height="28" HorizontalAlignment="Left" Margin="10,40,0,0" Name="label2" VerticalAlignment="Top" />
+                        <TextBox Height="23" HorizontalAlignment="Left" Margin="17,43,0,0" Name="dtTextBox" VerticalAlignment="Top" Width="60" TextChanged="dtTextBox_TextChanged" />
                     </StackPanel>
                     <DataGrid AutoGenerateColumns="False" Width="448" Height="325" HorizontalAlignment="Left" Margin="15,80,0,0" Name="dataGrid1" VerticalAlignment="Top" CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="i" IsReadOnly="True" Width="220" Binding="{Binding Path=i, Mode=TwoWay}"/>
-                            <DataGridTextColumn Header="[Ni]" Width="220" Binding="{Binding Path=N, Mode=TwoWay}" IsReadOnly="False" />
+                            <DataGridTextColumn Header="[ni]" Width="220" Binding="{Binding Path=ni, Mode=TwoWay}" IsReadOnly="False" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

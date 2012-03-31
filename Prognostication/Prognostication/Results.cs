@@ -8,11 +8,11 @@ namespace Prognostication
     class Results
     {
         public int i { set; get; }
-        public int N { set; get; }
-        public Results(int ii, int NN)
+        public int ni { set; get; }
+        public Results(int ii, int Ni)
         {
             i = ii;
-            N = NN;
+            ni = Ni;
         }
         public Results(int ii)
         {
