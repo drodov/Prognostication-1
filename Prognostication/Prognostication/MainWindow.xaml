@@ -1,0 +1,80 @@
+﻿<Window x:Class="Prognostication.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wf="clr-namespace:ZedGraph;assembly=ZedGraph"
+        Title="MainWindow" Height="500" Width="653">
+    <Grid>
+        <TabControl Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="tabControl1" Width="Auto">
+            <TabItem Header="Данные" Name="DataTabItem">
+                <Grid>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Количество промежутков времени [K]" Height="28" HorizontalAlignment="Left" Margin="10,10,0,0" Name="label1" VerticalAlignment="Top" />
+                        <TextBox Height="23" HorizontalAlignment="Left" Margin="20,13,0,0" Name="KTextBox" VerticalAlignment="Top" Width="60" TextChanged="KTextBox_TextChanged" />
+                        <Button Content="Вычислить" Margin="50,13,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="50" Name="StartButton" Width="100" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Длина промежутка [dt]" Height="28" HorizontalAlignment="Left" Margin="10,40,0,0" Name="label2" VerticalAlignment="Top" />
+                        <TextBox Height="23" HorizontalAlignment="Left" Margin="104,43,0,0" Name="dtTextBox" VerticalAlignment="Top" Width="60" />
+                    </StackPanel>
+                    <DataGrid AutoGenerateColumns="False" Width="448" Height="325" HorizontalAlignment="Left" Margin="15,80,0,0" Name="dataGrid1" VerticalAlignment="Top" CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="i" IsReadOnly="True" Width="220" Binding="{Binding Path=i, Mode=TwoWay}"/>
+                            <DataGridTextColumn Header="[Ni]" Width="220" Binding="{Binding Path=N, Mode=TwoWay}" IsReadOnly="False" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Экспоненциальное" Name="ExpTabItem">
+                <Grid>
+                    <WindowsFormsHost Background="White" Name="ExpWFH">
+                        <wf:ZedGraphControl Name="ExpZedGraph">
+                        </wf:ZedGraphControl>
+                    </WindowsFormsHost>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Эрланга" Name="ErlTabItem">
+                <Grid>
+                    <WindowsFormsHost Background="White"  Name="ErlWFH">
+                        <wf:ZedGraphControl Name="ErlZedGraph">
+                        </wf:ZedGraphControl>
+                    </WindowsFormsHost>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Рэлея" Name="RelTabItem">
+                <Grid>
+                    <WindowsFormsHost Background="White" Name="RelWFH">
+                        <wf:ZedGraphControl Name="RelZedGraph">
+                        </wf:ZedGraphControl>
+                    </WindowsFormsHost>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Вэйбулла" Name="VejbTabItem">
+                <Grid>
+                    <WindowsFormsHost Background="White" Name="VejbWFH">
+                        <wf:ZedGraphControl Name="VejbZedGraph">
+                        </wf:ZedGraphControl>
+                    </WindowsFormsHost>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Нормальный" Name="NormTabItem">
+                <Grid>
+                    <WindowsFormsHost Background="White" Name="NormWFH">
+                        <wf:ZedGraphControl Name="NormZedGraph">
+                        </wf:ZedGraphControl>
+                    </WindowsFormsHost>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Усеченный нормальный" Name="ShortNormTabItem">
+                <Grid>
+                    <WindowsFormsHost Background="White" Name="ShortNormWFH">
+                        <wf:ZedGraphControl Name="ShortNormZedGraph">
+                        </wf:ZedGraphControl>
+                    </WindowsFormsHost>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Итого" Name="FinalTabItem">
+                <Grid />
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
