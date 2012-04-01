@@ -23,7 +23,7 @@ namespace Prognostication
     {
         Int32 K, N0 = 100;
         Double[] P;
-        Double dt;
+        Double dt, M1, M2, S;
         ObservableCollection<Results> ResCol = new ObservableCollection<Results>();
         public MainWindow()
         {
@@ -77,6 +77,9 @@ namespace Prognostication
 
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
+            M1 = 0;
+            M2 = 0;
+            S = 0;
             Double.TryParse(dtTextBox.Text, out dt);
             if (dt == 0)
                 return;
@@ -86,8 +89,13 @@ namespace Prognostication
             P = new Double[K];
             for(int i = 0; i < K; i++)
             {
+                M1 += (double)(i - 0.5) * ResCol[i].ni;
+                M2 += Math.Pow((double)(i - 0.5), 2) * ResCol[i].ni;
                 P[i] = CountProbability(i);
             }
+            M1 = M1 * dt / N0;
+            M2 = M2 * Math.Pow( dt, 2 ) / N0;
+            S = Math.Sqrt(M2 - Math.Pow(M1, 2));
             DrawExpGraphics();
             DrawErlGraphics();
             DrawRelGraphics();
@@ -102,7 +110,7 @@ namespace Prognostication
             if (idx == -1)
                 return N0;
             int Ni = N0;
-            for (int i = 0; i < idx; i++)
+            for (int i = 0; i < idx+1; i++)
             {
                 Ni -= ResCol[i].ni;
             }
@@ -118,16 +126,34 @@ namespace Prognostication
 
         void DrawExpGraphics()
         {
+            double t, a1, a2, a3 = 0;
+            a1 = 1 / M1;
+            a2 = Math.Sqrt(2 / M2);
+            for (int i = 0; i < K; i++)
+            {
+                a3 += ((double)(ResCol[i].ni)) / (CountNi(i) + CountNi(i + 1));
+            }
+            a3 = a3 * 2 / (K * dt);
             ZedGraphControl ExpZedGraph = ExpWFH.Child as ZedGraphControl;
             GraphPane pane = ExpZedGraph.GraphPane;
             pane.CurveList.Clear();
-            PointPairList list = new PointPairList();
+            PointPairList list0 = new PointPairList();
+            PointPairList list1 = new PointPairList();
+            PointPairList list2 = new PointPairList();
+            PointPairList list3 = new PointPairList();
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                list.Add( (ResCol[i].i - 0.5) * dt, P[i]);
+                t = (ResCol[i].i - 0.5) * dt;
+                list0.Add(t, P[i]);
+                list1.Add(t, FuncLowExp(a1, t));
+                list2.Add(t, FuncLowExp(a2, t));
+                list3.Add(t, FuncLowExp(a3, t));
             }
-            LineItem myCurve = pane.AddCurve("Практически", list, System.Drawing.Color.Red, SymbolType.None);
+            LineItem Curve0 = pane.AddCurve("Практически", list0, System.Drawing.Color.Red, SymbolType.None);
+            LineItem Curve1 = pane.AddCurve("a11", list1, System.Drawing.Color.Black, SymbolType.None);
+            LineItem Curve2 = pane.AddCurve("a12", list2, System.Drawing.Color.Green, SymbolType.None);
+            LineItem Curve3 = pane.AddCurve("a13", list3, System.Drawing.Color.Blue, SymbolType.None);
             ExpZedGraph.AxisChange();
             // Обновляем график
             ExpZedGraph.Invalidate();
@@ -216,6 +242,36 @@ namespace Prognostication
             ShortNormZedGraph.AxisChange();
             // Обновляем график
             ShortNormZedGraph.Invalidate();
+        }
+
+        double FuncLowExp(double a, double t)
+        {
+            return Math.Exp(-a * t);
+        }
+
+        double FuncLowErl(double a, double t)
+        {
+            return (1 + a * t) * Math.Exp(-a * t);
+        }
+
+        double FuncLowRel(double a, double t)
+        {
+            return Math.Exp(-a * Math.Pow(t, 2));
+        }
+
+        double FuncLowVejb(double a, double b, double t)
+        {
+            return Math.Exp(-a * Math.Pow(t, b));
+        }
+
+        double FuncNorm(double T, double q, double t)
+        {
+            return (1 / (q * Math.Sqrt(2 * Math.PI))) * Math.Exp(-Math.Pow(t - T, 2) / (2 * Math.Pow(q, 2)));
+        }
+
+        double FuncLowShortNorm(double T, double q, double t)
+        {
+            return (1 / (q * Math.Sqrt(2 * Math.PI))) * Math.Exp(-Math.Pow(t - T, 2) / (2 * Math.Pow(q, 2)));
         }
     }
 }
