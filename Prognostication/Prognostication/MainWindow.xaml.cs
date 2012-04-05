@@ -159,10 +159,10 @@ namespace Prognostication
                 list2.Add(t, FuncLowExp(a2, t));
                 list3.Add(t, FuncLowExp(a3, t));
             }
-            LineItem Curve0 = pane.AddCurve("Практически", list0, System.Drawing.Color.Red, SymbolType.None);
-            LineItem Curve1 = pane.AddCurve("M1", list1, System.Drawing.Color.Black, SymbolType.None);
-            LineItem Curve2 = pane.AddCurve("M2", list2, System.Drawing.Color.Green, SymbolType.None);
-            LineItem Curve3 = pane.AddCurve("ММП", list3, System.Drawing.Color.Blue, SymbolType.None);
+            LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
+            LineItem Curve1 = pane.AddCurve("a11", list1, System.Drawing.Color.Black, SymbolType.None);
+            LineItem Curve2 = pane.AddCurve("a12", list2, System.Drawing.Color.Green, SymbolType.None);
+            LineItem Curve3 = pane.AddCurve("a13", list3, System.Drawing.Color.Blue, SymbolType.None);
             ExpZedGraph.AxisChange();
             // Обновляем график
             ExpZedGraph.Invalidate();
@@ -194,10 +194,10 @@ namespace Prognostication
                 list2.Add(t, FuncLowErl(a2, t));
                 list3.Add(t, FuncLowErl(a3, t));
             }
-            LineItem Curve0 = pane.AddCurve("Практически", list0, System.Drawing.Color.Red, SymbolType.None);
-            LineItem Curve1 = pane.AddCurve("M1", list1, System.Drawing.Color.Black, SymbolType.None);
-            LineItem Curve2 = pane.AddCurve("M2", list2, System.Drawing.Color.Green, SymbolType.None);
-            LineItem Curve3 = pane.AddCurve("МНК", list3, System.Drawing.Color.Blue, SymbolType.None);
+            LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
+            LineItem Curve1 = pane.AddCurve("a21", list1, System.Drawing.Color.Black, SymbolType.None);
+            LineItem Curve2 = pane.AddCurve("a22", list2, System.Drawing.Color.Green, SymbolType.None);
+            LineItem Curve3 = pane.AddCurve("a23", list3, System.Drawing.Color.Blue, SymbolType.None);
             ErlZedGraph.AxisChange();
             // Обновляем график
             ErlZedGraph.Invalidate();
@@ -206,7 +206,7 @@ namespace Prognostication
         void DrawRelGraphics()
         {
             double t, a1, a2, a3 = 0, a4;
-            a1 = (Math.PI / 4) * Math.Pow(((double)N0 / dt), 2) * (1.0 / Math.Pow((M2 / Math.Pow(dt, 2) * N0), 2));
+            a1 = Math.PI / 4 / M1 / M1; 
             a2 = 1.0 / M2;
             a4 = 1.0 / (K * dt * dt) * (ResCol[K - 1].ni / CountNi(K - 1) - (double)ResCol[0].ni / (N0 + CountNi(1)));
             for (int i = 0; i < K; i++)
@@ -232,11 +232,11 @@ namespace Prognostication
                 list3.Add(t, FuncLowRel(a3, t));
                 list4.Add(t, FuncLowRel(a4, t));
             }
-            LineItem Curve0 = pane.AddCurve("Практически", list0, System.Drawing.Color.Red, SymbolType.None);
-            LineItem Curve1 = pane.AddCurve("M1", list1, System.Drawing.Color.Black, SymbolType.None);
-            LineItem Curve2 = pane.AddCurve("M2", list2, System.Drawing.Color.Green, SymbolType.None);
-            LineItem Curve3 = pane.AddCurve("МНК1", list3, System.Drawing.Color.Blue, SymbolType.None);
-            LineItem Curve4 = pane.AddCurve("МНК2", list4, System.Drawing.Color.DarkOrange, SymbolType.None);
+            LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
+            LineItem Curve1 = pane.AddCurve("a31", list1, System.Drawing.Color.Black, SymbolType.None);
+            LineItem Curve2 = pane.AddCurve("a32", list2, System.Drawing.Color.Green, SymbolType.None);
+            LineItem Curve3 = pane.AddCurve("a33", list3, System.Drawing.Color.Blue, SymbolType.None);
+            LineItem Curve4 = pane.AddCurve("a34", list4, System.Drawing.Color.DarkOrange, SymbolType.None);
             RelZedGraph.AxisChange();
             // Обновляем график
             RelZedGraph.Invalidate();
@@ -253,7 +253,7 @@ namespace Prognostication
             {
                 list.Add((ResCol[i].i - 0.5) * dt, P[i]);
             }
-            LineItem myCurve = pane.AddCurve("Практически", list, System.Drawing.Color.Red, SymbolType.None);
+            LineItem myCurve = pane.AddCurve("Экспериментально", list, System.Drawing.Color.Red, SymbolType.None);
             VejbZedGraph.AxisChange();
             // Обновляем график
             VejbZedGraph.Invalidate();
@@ -281,10 +281,10 @@ namespace Prognostication
                 list2.Add(t, FuncLowNorm(T2, q2, t));
                 list3.Add(t, FuncLowNorm(T3, q3, t));
             }
-            LineItem Curve0 = pane.AddCurve("Практически", list0, System.Drawing.Color.Red, SymbolType.None);
-            LineItem Curve1 = pane.AddCurve("M1", list1, System.Drawing.Color.Black, SymbolType.None);
-            LineItem Curve2 = pane.AddCurve("M2", list2, System.Drawing.Color.Green, SymbolType.None);
-            LineItem Curve3 = pane.AddCurve("ММП", list3, System.Drawing.Color.Blue, SymbolType.None);
+            LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
+            LineItem Curve1 = pane.AddCurve("a51 = a52", list1, System.Drawing.Color.Black, SymbolType.None);
+            //LineItem Curve2 = pane.AddCurve("a52", list2, System.Drawing.Color.Green, SymbolType.None);
+            LineItem Curve3 = pane.AddCurve("a53", list3, System.Drawing.Color.Blue, SymbolType.None);
             NormZedGraph.AxisChange();
             // Обновляем график
             NormZedGraph.Invalidate();
@@ -301,7 +301,7 @@ namespace Prognostication
             {
                 list.Add((ResCol[i].i - 0.5) * dt, P[i]);
             }
-            LineItem myCurve = pane.AddCurve("Практически", list, System.Drawing.Color.Red, SymbolType.None);
+            LineItem myCurve = pane.AddCurve("Экспериментально", list, System.Drawing.Color.Red, SymbolType.None);
             ShortNormZedGraph.AxisChange();
             // Обновляем график
             ShortNormZedGraph.Invalidate();
@@ -350,12 +350,96 @@ namespace Prognostication
         double IntegralForNorm(double lim1, double lim2, double T, double q)
         {
             double result = 0;
-            double s = 0.00001;
+            double s = 0.0001;
             for (double i = lim1 + s; i <= lim2 - s; i += 2 * s)
             {
                 result += FuncNorm(T, q, i) * 2 * s;
             }
             return result;
+        }
+
+        double CountDExp(double a)
+        {
+            Double D = 0;
+            Double temp;
+            for (int i = 1; i <= K; i++)
+            {
+                temp = a * Math.Exp(-a * (i - 0.5) * dt) - ResCol[i - 1].ni / (N0 * dt);
+                D += Math.Pow(temp, 2);
+            }
+            D /= K;
+            return D;
+        }
+
+        double CountDErl(double a)
+        {
+            Double D = 0;
+            Double temp;
+            for (int i = 1; i <= K; i++)
+            {
+                temp = a * a * (i - 0.5) * dt * Math.Exp(-a * (i - 0.5) * dt) - ResCol[i - 1].ni / (N0 * dt);
+                D += Math.Pow(temp, 2);
+            }
+            D /= K;
+            return D;
+        }
+
+        double CountDRel(double a)
+        {
+            Double D = 0;
+            Double temp;
+            for (int i = 1; i <= K; i++)
+            {
+                temp = 2 * a * (i - 0.5) * dt * Math.Exp(-a * (i - 0.5) * (i - 0.5) * dt * dt) - ResCol[i - 1].ni / (N0 * dt);
+                D += Math.Pow(temp, 2);
+            }
+            D /= K;
+            return D;
+        }
+
+        double CountDVejb(double a, double b)
+        {
+            Double D = 0;
+            Double temp;
+            Double t;
+            for (int i = 1; i <= K; i++)
+            {
+                t = (i - 0.5) * dt;
+                temp = a * b * Math.Pow(t, b - 1) * Math.Exp(-a * Math.Pow(t, b)) - ResCol[i - 1].ni / (N0 * dt);
+                D += Math.Pow(temp, 2);
+            }
+            D /= K;
+            return D;
+        }
+
+        double CountDNorm(double q, double T)
+        {
+            Double D = 0;
+            Double temp;
+            Double t;
+            for (int i = 1; i <= K; i++)
+            {
+                t = (i - 0.5) * dt;
+                temp = 1 / (q * Math.Sqrt(2 * Math.PI)) * Math.Exp(-(t - T) * (t - T) / (2 * q * q)) - ResCol[i - 1].ni / (N0 * dt);
+                D += Math.Pow(temp, 2);
+            }
+            D /= K;
+            return D;
+        }
+
+        double CountDShortNorm(double q, double T, double C)
+        {
+            Double D = 0;
+            Double temp;
+            Double t;
+            for (int i = 1; i <= K; i++)
+            {
+                t = (i - 0.5) * dt;
+                temp = C / (q * Math.Sqrt(2 * Math.PI)) * Math.Exp(-(t - T) * (t - T) / (2 * q * q)) - ResCol[i - 1].ni / (N0 * dt);
+                D += Math.Pow(temp, 2);
+            }
+            D /= K;
+            return D;
         }
     }
 }

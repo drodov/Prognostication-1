@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:wf="clr-namespace:ZedGraph;assembly=ZedGraph"
-        Title="MainWindow" Height="500" Width="653">
+        Title="MainWindow" Height="500" Width="653"
+        WindowStartupLocation="CenterScreen">
     <Grid>
         <TabControl Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="tabControl1" Width="Auto">
             <TabItem Header="Данные" Name="DataTabItem">
@@ -16,7 +17,7 @@
                         <Label Content="Длина промежутка [dt] (в формате 0,0)" Height="28" HorizontalAlignment="Left" Margin="10,40,0,0" Name="label2" VerticalAlignment="Top" />
                         <TextBox Height="23" HorizontalAlignment="Left" Margin="17,43,0,0" Name="dtTextBox" VerticalAlignment="Top" Width="60" TextChanged="dtTextBox_TextChanged" />
                     </StackPanel>
-                    <DataGrid AutoGenerateColumns="False" Width="448" Height="325" HorizontalAlignment="Left" Margin="15,80,0,0" Name="dataGrid1" VerticalAlignment="Top" CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False">
+                    <DataGrid AutoGenerateColumns="False" Width="448" Height="Auto" MinHeight="325" HorizontalAlignment="Left" Margin="15,80,0,0" Name="dataGrid1" VerticalAlignment="Top" CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="i" IsReadOnly="True" Width="220" Binding="{Binding Path=i, Mode=TwoWay}"/>
                             <DataGridTextColumn Header="[ni]" Width="220" Binding="{Binding Path=ni, Mode=TwoWay}" IsReadOnly="False" />
