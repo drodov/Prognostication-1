@@ -24,6 +24,7 @@ namespace Prognostication
         Int32 K, N0 = 100;
         Double[] P;
         Double dt, M1, M2, S;
+        Double[] D = new Double[16];
         ObservableCollection<Results> ResCol = new ObservableCollection<Results>();
         public MainWindow()
         {
@@ -102,6 +103,7 @@ namespace Prognostication
             DrawVejbGraphics();
             DrawNormGraphics();
             DrawShortNormGraphics();
+            ShowD();
         }
 
         int CountNi(int idx)
@@ -131,6 +133,12 @@ namespace Prognostication
             int i1 = i;
             int i2 = i + 1;
             return (double)(2.0 * ResCol[i].ni / (dt * (CountNi(i1) + CountNi(i2))));
+        }
+
+        double CountF(int i)
+        {
+            i--;
+            return ((double)ResCol[i].ni / (N0 * dt));
         }
 
         void DrawExpGraphics()
@@ -166,6 +174,10 @@ namespace Prognostication
             ExpZedGraph.AxisChange();
             // Обновляем график
             ExpZedGraph.Invalidate();
+
+            D[0] = CountDExp(a1);
+            D[1] = CountDExp(a2);
+            D[2] = CountDExp(a3);
         }
 
         void DrawErlGraphics()
@@ -176,7 +188,7 @@ namespace Prognostication
             for (int i = 0; i < K; i++)
             {
                 sqr = Math.Sqrt((CountLambda(i) - CountLambda(i - 1)) / dt);
-                a3 += (1.0 / K) * sqr / (1 - ((double)(i + 1) - 0.5) * dt * sqr);
+                a3 += (1.0 / K) * sqr / (1 - (i + 1 - 0.5) * dt * sqr);
             }
             ZedGraphControl ErlZedGraph = ErlWFH.Child as ZedGraphControl;
             GraphPane pane = ErlZedGraph.GraphPane;
@@ -201,6 +213,10 @@ namespace Prognostication
             ErlZedGraph.AxisChange();
             // Обновляем график
             ErlZedGraph.Invalidate();
+
+            D[3] = CountDErl(a1);
+            D[4] = CountDErl(a2);
+            D[5] = CountDErl(a3);
         }
 
         void DrawRelGraphics()
@@ -240,28 +256,63 @@ namespace Prognostication
             RelZedGraph.AxisChange();
             // Обновляем график
             RelZedGraph.Invalidate();
+
+            D[6] = CountDRel(a1);
+            D[7] = CountDRel(a2);
+            D[8] = CountDRel(a3);
+            D[9] = CountDRel(a4);
         }
 
         void DrawVejbGraphics()
         {
+            double t, x, y, a = 0, b = 0, c = 0, d = 0, e = 0;
+            for (int i = 0; i < K; i++)
+            {
+                a += Math.Log(CountLambda(i)); // i+1
+                b += Math.Log(i + 1 - 0.5) + Math.Log(dt);
+                c += Math.Pow(Math.Log(i + 1 - 0.5) + Math.Log(dt), 2);
+                e += Math.Log(CountLambda(i)) * (Math.Log(i + 1 - 0.5) + Math.Log(dt));
+            }
+            d = b * b;
+            x = (a  * c - b * e) / (K * c - b * b);
+            y = (a * b - K * e) / (b * b - K * c);
+            double B = 1 + y;
+            double A = Math.Exp(x) / B;
             ZedGraphControl VejbZedGraph = VejbWFH.Child as ZedGraphControl;
             GraphPane pane = VejbZedGraph.GraphPane;
             pane.CurveList.Clear();
-            PointPairList list = new PointPairList();
+            PointPairList list0 = new PointPairList();
+            PointPairList list1 = new PointPairList();
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                list.Add((ResCol[i].i - 0.5) * dt, P[i]);
-            }
-            LineItem myCurve = pane.AddCurve("Экспериментально", list, System.Drawing.Color.Red, SymbolType.None);
+                t = (ResCol[i].i - 0.5) * dt;
+                list0.Add(t, P[i]);
+                list1.Add(t, FuncLowVejb(A, B, t));
+            }//
+            LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
+            LineItem Curve1 = pane.AddCurve("a21", list1, System.Drawing.Color.Black, SymbolType.None);
             VejbZedGraph.AxisChange();
             // Обновляем график
             VejbZedGraph.Invalidate();
+
+            D[10] = CountDVejb(A, B);
         }
 
         void DrawNormGraphics()
         {
-            double t, T1, T2, T3, T4, q1, q2, q3, q4;
+            double t, T1, T2, T3, T4 = 0, q1, q2, q3, q4 = 0, a, b = 0, g = 1, Y, X;
+            a = Math.Log(CountF(1) / CountF(K));
+            for (int i = 1; i <= K - 1; i++)
+            {
+                b += Math.Pow(Math.Log(CountF(i) / CountF(i + 1)), 2);
+                g *= Math.Pow(CountF(i) / CountF(i + 1), i);
+            }
+            g = Math.Log(g);
+            Y = (double)(K - 1) * (0.5 * K * a - g) / (a * a - b * (K - 1));
+            X = (0.5 * K * b * (K - 1) - g * a) / (b * (K - 1) - a * a);
+            T4 = X * dt;
+            q4 = Math.Sqrt(Y ) * dt;
             T1 = T2 = T3 = M1;
             q1 = q2 = S;
             q3 = q1 * Math.Sqrt(2);
@@ -272,39 +323,66 @@ namespace Prognostication
             PointPairList list1 = new PointPairList();
             PointPairList list2 = new PointPairList();
             PointPairList list3 = new PointPairList();
+            PointPairList list4 = new PointPairList();
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
                 t = (ResCol[i].i - 0.5) * dt;
                 list0.Add(t, P[i]);
                 list1.Add(t, FuncLowNorm(T1, q1, t));
-                list2.Add(t, FuncLowNorm(T2, q2, t));
+                //                list2.Add(t, FuncLowNorm(T2, q2, t));
                 list3.Add(t, FuncLowNorm(T3, q3, t));
+                list4.Add(t, FuncLowNorm(T4, q4, t));
             }
             LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
             LineItem Curve1 = pane.AddCurve("a51 = a52", list1, System.Drawing.Color.Black, SymbolType.None);
             //LineItem Curve2 = pane.AddCurve("a52", list2, System.Drawing.Color.Green, SymbolType.None);
             LineItem Curve3 = pane.AddCurve("a53", list3, System.Drawing.Color.Blue, SymbolType.None);
+            LineItem Curve4 = pane.AddCurve("a54", list4, System.Drawing.Color.Green, SymbolType.None);
             NormZedGraph.AxisChange();
             // Обновляем график
             NormZedGraph.Invalidate();
+
+            D[11] = CountDNorm(q1, T1);
+            D[12] = CountDNorm(q2, T2);
+            D[13] = CountDNorm(q3, T3);
+            D[14] = CountDNorm(q4, T4);
         }
 
         void DrawShortNormGraphics()
         {
+            double t, C, T = 0, q = 0, a, b = 0, g = 1, Y, X;
+            a = Math.Log(CountF(1) / CountF(K));
+            for (int i = 1; i < K; i++)
+            {
+                b += Math.Pow(Math.Log(CountF(i) / CountF(i + 1)), 2);
+                g *= Math.Pow(CountF(i) / CountF(i + 1), i);
+            }
+            g = Math.Log(g);
+            Y = (double)(K - 1) * (0.5 * K * a - g) / (a * a - b * (K - 1));
+            X = (0.5 * K * b * (K - 1) - g * a) / (b * (K - 1) - a * a);
+            T = X * dt;
+            q = Math.Sqrt(Y) * dt;
+            C = 1.0 / (0.5 + FLaplas(T / q));
             ZedGraphControl ShortNormZedGraph = ShortNormWFH.Child as ZedGraphControl;
             GraphPane pane = ShortNormZedGraph.GraphPane;
-            pane.CurveList.Clear(); 
-            PointPairList list = new PointPairList();
+            pane.CurveList.Clear();
+            PointPairList list0 = new PointPairList();
+            PointPairList list1 = new PointPairList();
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                list.Add((ResCol[i].i - 0.5) * dt, P[i]);
+                t = (ResCol[i].i - 0.5) * dt;
+                list0.Add(t, P[i]);
+                list1.Add(t, FuncLowShortNorm(T, q, t, C));
             }
-            LineItem myCurve = pane.AddCurve("Экспериментально", list, System.Drawing.Color.Red, SymbolType.None);
+            LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
+            LineItem Curve1 = pane.AddCurve("a6", list1, System.Drawing.Color.Black, SymbolType.None);
             ShortNormZedGraph.AxisChange();
             // Обновляем график
             ShortNormZedGraph.Invalidate();
+
+            D[15] = CountDNorm(q, T);
         }
 
         double FuncLowExp(double a, double t)
@@ -332,19 +410,15 @@ namespace Prognostication
             return (1 / (q * Math.Sqrt(2 * Math.PI))) * Math.Exp(-Math.Pow(t - T, 2) / (2 * Math.Pow(q, 2)));
         }
 
-        double FuncShortNorm(double T, double q, double t)
-        {
-            return 0;
-        }
-
         double FuncLowNorm(double T, double q, double t)
         {
             return 1 - IntegralForNorm(0, t, T, q);
         }
 
-        double FuncLowShortNorm(double T, double q, double t)
+        double FuncLowShortNorm(double T, double q, double t, double C)
         {
-            return 0;
+            double res = C * (0.5 - FLaplas((t - T) / q));
+            return res;
         }
 
         double IntegralForNorm(double lim1, double lim2, double T, double q)
@@ -440,6 +514,95 @@ namespace Prognostication
             }
             D /= K;
             return D;
+        }
+
+        void ShowD()
+        {
+            double min = D.Min();
+            D11Label.Content += D[0].ToString();
+            if (D[0] == min)
+                D11Label.Foreground = Brushes.Red;
+            D12Label.Content += D[1].ToString();
+            if (D[1] == min)
+                D12Label.Foreground = Brushes.Red;
+            D13Label.Content += D[2].ToString();
+            if (D[2] == min)
+                D13Label.Foreground = Brushes.Red;
+            D21Label.Content += D[3].ToString();
+            if (D[3] == min)
+                D21Label.Foreground = Brushes.Red;
+            D22Label.Content += D[4].ToString();
+            if (D[4] == min)
+                D22Label.Foreground = Brushes.Red;
+            D23Label.Content += D[5].ToString();
+            if (D[5] == min)
+                D23Label.Foreground = Brushes.Red;
+            D31Label.Content += D[6].ToString();
+            if (D[6] == min)
+                D31Label.Foreground = Brushes.Red;
+            D32Label.Content += D[7].ToString();
+            if (D[7] == min)
+                D32Label.Foreground = Brushes.Red;
+            D33Label.Content += D[8].ToString();
+            if (D[8] == min)
+                D33Label.Foreground = Brushes.Red;
+            D34Label.Content += D[9].ToString();
+            if (D[9] == min)
+                D34Label.Foreground = Brushes.Red;
+            D4Label.Content += D[10].ToString();
+            if (D[10] == min)
+                D4Label.Foreground = Brushes.Red;
+            D51Label.Content += D[11].ToString();
+            if (D[11] == min)
+                D51Label.Foreground = Brushes.Red;
+            D52Label.Content += D[12].ToString();
+            if (D[12] == min)
+                D52Label.Foreground = Brushes.Red;
+            D53Label.Content += D[13].ToString();
+            if (D[13] == min)
+                D53Label.Foreground = Brushes.Red;
+            D54Label.Content += D[14].ToString();
+            if (D[14] == min)
+                D54Label.Foreground = Brushes.Red;
+            D6Label.Content += D[15].ToString();
+            if (D[15] == min)
+                D6Label.Foreground = Brushes.Red;
+            AnswDLabel.Content = min.ToString();
+        }
+
+        double Factorial(int x)
+        {
+            double y = 1;
+            if (x == 0)
+                return 0;
+            for (int i = x; i != 0; i--)
+            {
+                y *= i;
+            }
+                return y;
+        }
+
+        double FLaplas(double x)
+        {
+            double res = 1.0 / Math.Sqrt(2 * Math.PI) * IntegralForLaplas(0, x, x);
+            return res;
+        }
+
+        double IntegralForLaplas(double lim1, double lim2, double x)
+        {/*
+            if (lim2 < 0)
+            {
+                double temp = lim2;
+                lim2 = lim1;
+                lim1 = temp;
+            }*/
+            double result = 0;
+            double s = 0.000001;
+            for (double i = lim1 + s; i <= lim2 - s; i += 2 * s)
+            {
+                result += Math.Exp(-(x * x) / 2) * s * 2;
+            }
+            return result;
         }
     }
 }

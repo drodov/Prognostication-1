@@ -74,7 +74,64 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Итого" Name="FinalTabItem">
-                <Grid />
+                <Grid>
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal">
+                            <Grid Width="300" VerticalAlignment="Top"  HorizontalAlignment="Left">
+                                <StackPanel>
+                                    <Label Content="Экпоненциальное" Height="28" HorizontalAlignment="Left" Margin="10,10,0,0" Name="ExpLabel" VerticalAlignment="Top" Foreground="Blue"/>
+                                    <Label Content="D11 = " Margin="10,0,0,0" Height="28" Name="D11Label" />
+                                    <Label Content="D12 = " Margin="10,0,0,0" Height="28" Name="D12Label" />
+                                    <Label Content="D13 = " Margin="10,0,0,0" Height="28" Name="D13Label" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid Width="300" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <Label Content="Эрланга" Height="28" HorizontalAlignment="Left" Margin="10,10,0,0" Name="ErlLabel" VerticalAlignment="Top" Foreground="Blue"/>
+                                    <Label Content="D21 = " Margin="10,0,0,0" Height="28" Name="D21Label" />
+                                    <Label Content="D22 = " Margin="10,0,0,0" Height="28" Name="D22Label" />
+                                    <Label Content="D23 = " Margin="10,0,0,0" Height="28" Name="D23Label" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Grid Width="300" VerticalAlignment="Top"  HorizontalAlignment="Left">
+                                <StackPanel>
+                                    <Label Content="Рэлея" Height="28" HorizontalAlignment="Left" Margin="10,10,0,0" Name="RelLabel" VerticalAlignment="Top" Foreground="Blue"/>
+                                    <Label Content="D31 = " Margin="10,0,0,0" Height="28" Name="D31Label" />
+                                    <Label Content="D32 = " Margin="10,0,0,0" Height="28" Name="D32Label" />
+                                    <Label Content="D33 = " Margin="10,0,0,0" Height="28" Name="D33Label" />
+                                    <Label Content="D34 = " Margin="10,0,0,0" Height="28" Name="D34Label" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid Width="300" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <Label Content="Вейбулла" Height="28" HorizontalAlignment="Left" Margin="10,10,0,0" Name="VejbLabel" VerticalAlignment="Top" Foreground="Blue"/>
+                                    <Label Content="D4 = " Margin="10,0,0,0" Height="28" Name="D4Label" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Grid Width="300" VerticalAlignment="Top"  HorizontalAlignment="Left">
+                                <StackPanel>
+                                    <Label Content="Нормальный" Height="28" HorizontalAlignment="Left" Margin="10,10,0,0" Name="NormLabel" VerticalAlignment="Top" Foreground="Blue" />
+                                    <Label Content="D51 = " Margin="10,0,0,0" Height="28" Name="D51Label" />
+                                    <Label Content="D52 = " Margin="10,0,0,0" Height="28" Name="D52Label" />
+                                    <Label Content="D53 = " Margin="10,0,0,0" Height="28" Name="D53Label" />
+                                    <Label Content="D54 = " Margin="10,0,0,0" Height="28" Name="D54Label" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid Width="300" VerticalAlignment="Top"  HorizontalAlignment="Left">
+                                <StackPanel>
+                                    <Label Content="Усеченный нормальный" Height="28" HorizontalAlignment="Left" Margin="10,10,0,0" Name="ShortNormLabel" VerticalAlignment="Top" Foreground="Blue"/>
+                                    <Label Content="D6 = " Margin="10,0,0,0" Height="28" Name="D6Label" />
+                                    <Label Content="Ответ:" Margin="10,20,0,0" Height="28" Name="label3" Foreground="Red"/>
+                                    <Label Content="" Margin="10,0,0,0" Height="28" Name="AnswDLabel" Foreground="Red"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
             </TabItem>
         </TabControl>
     </Grid>
