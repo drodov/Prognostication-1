@@ -21,6 +21,7 @@ namespace Prognostication
     /// </summary>
     public partial class MainWindow : Window
     {
+        double DELTA = 0.0001;
         Int32 K, N0 = 100;
         Double[] P;
         Double dt, M1, M2, S;
@@ -84,6 +85,14 @@ namespace Prognostication
             Double.TryParse(dtTextBox.Text, out dt);
             if (dt == 0)
                 return;
+            for (int i = 1; ; i *= 10 )
+            {
+                if ((int)dt / i == 0)
+                {
+                    DELTA *= i;
+                    break;
+                }
+            }
             Int32.TryParse(KTextBox.Text, out K);
             if (K < 10)
                 return;
@@ -109,7 +118,7 @@ namespace Prognostication
         int CountNi(int idx)
         {
             idx--;
-            if (idx == -1)
+            if (idx < 0)
                 return N0;
             int Ni = N0;
             for (int i = 0; i < idx + 1; i++)
@@ -128,7 +137,7 @@ namespace Prognostication
 
         double CountLambda(int i)
         {
-            if (i == -1)
+            if (i < 0)
                 return 0;
             int i1 = i;
             int i2 = i + 1;
@@ -187,7 +196,11 @@ namespace Prognostication
             a2 = Math.Sqrt(6.0 / M2);
             for (int i = 0; i < K; i++)
             {
-                sqr = Math.Sqrt((CountLambda(i) - CountLambda(i - 1)) / dt);
+                sqr = Math.Sqrt((CountLambda(i) - CountLambda(i - 1)) / dt);/*
+sqr = (CountLambda(i) - CountLambda(i - 1)) / dt;
+if (sqr < 0)
+    sqr *= -1;
+sqr = Math.Sqrt(sqr)*/
                 a3 += (1.0 / K) * sqr / (1 - (i + 1 - 0.5) * dt * sqr);
             }
             ZedGraphControl ErlZedGraph = ErlWFH.Child as ZedGraphControl;
@@ -382,7 +395,7 @@ namespace Prognostication
             // Обновляем график
             ShortNormZedGraph.Invalidate();
 
-            D[15] = CountDNorm(q, T);
+            D[15] = CountDShortNorm(q, T, C);
         }
 
         double FuncLowExp(double a, double t)
@@ -397,7 +410,7 @@ namespace Prognostication
 
         double FuncLowRel(double a, double t)
         {
-            return Math.Exp(-a * Math.Pow(t, 2));
+            return Math.Exp(-a * t * t);
         }
 
         double FuncLowVejb(double a, double b, double t)
@@ -417,14 +430,19 @@ namespace Prognostication
 
         double FuncLowShortNorm(double T, double q, double t, double C)
         {
+            return C * (1 - IntegralForNorm(0, t, T, q));
+        }
+
+ /*       double FuncLowShortNorm(double T, double q, double t, double C)
+        {
             double res = C * (0.5 - FLaplas((t - T) / q));
             return res;
         }
-
+*/
         double IntegralForNorm(double lim1, double lim2, double T, double q)
         {
             double result = 0;
-            double s = 0.0001;
+            double s = DELTA;
             for (double i = lim1 + s; i <= lim2 - s; i += 2 * s)
             {
                 result += FuncNorm(T, q, i) * 2 * s;
@@ -597,7 +615,7 @@ namespace Prognostication
                 lim1 = temp;
             }*/
             double result = 0;
-            double s = 0.000001;
+            double s = DELTA;
             for (double i = lim1 + s; i <= lim2 - s; i += 2 * s)
             {
                 result += Math.Exp(-(x * x) / 2) * s * 2;
