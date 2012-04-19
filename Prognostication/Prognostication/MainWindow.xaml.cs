@@ -60,7 +60,7 @@ namespace Prognostication
         private void KTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             Int32.TryParse(KTextBox.Text, out K);
-            if ( K < 10 )
+            if ( K < 1 )
                 return;
             ResCol.Clear();
             for (int i = 0; i < K; i++)
@@ -79,12 +79,16 @@ namespace Prognostication
 
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
+            Clear();
             M1 = 0;
             M2 = 0;
             S = 0;
             Double.TryParse(dtTextBox.Text, out dt);
-            if (dt == 0)
+            if (dt == 0 || dt <= 0)
+            {
+                MessageBox.Show("Неправильно указано время dt.\n(Пример: 10,1)");
                 return;
+            }
             for (int i = 1; ; i *= 10 )
             {
                 if ((int)dt / i == 0)
@@ -94,7 +98,7 @@ namespace Prognostication
                 }
             }
             Int32.TryParse(KTextBox.Text, out K);
-            if (K < 10)
+            if (K < 1)
                 return;
             P = new Double[K];
             for(int i = 0; i < K; i++)
@@ -184,6 +188,9 @@ namespace Prognostication
             // Обновляем график
             ExpZedGraph.Invalidate();
 
+            A11Label.Content = "a11 = " + a1.ToString();
+            A12Label.Content = "a12 = " + a2.ToString();
+            A13Label.Content = "a13 = " + a3.ToString();
             D[0] = CountDExp(a1);
             D[1] = CountDExp(a2);
             D[2] = CountDExp(a3);
@@ -227,6 +234,9 @@ sqr = Math.Sqrt(sqr)*/
             // Обновляем график
             ErlZedGraph.Invalidate();
 
+            A21Label.Content = "a21 = " + a1.ToString();
+            A22Label.Content = "a22 = " + a2.ToString();
+            A23Label.Content = "a23 = " + a3.ToString();
             D[3] = CountDErl(a1);
             D[4] = CountDErl(a2);
             D[5] = CountDErl(a3);
@@ -270,6 +280,11 @@ sqr = Math.Sqrt(sqr)*/
             // Обновляем график
             RelZedGraph.Invalidate();
 
+            A31Label.Content = "a31 = " + a1.ToString();
+            A32Label.Content = "a32 = " + a2.ToString();
+            A33Label.Content = "a33 = " + a3.ToString();
+            A34Label.Content = "a34 = " + a4.ToString();
+
             D[6] = CountDRel(a1);
             D[7] = CountDRel(a2);
             D[8] = CountDRel(a3);
@@ -309,6 +324,8 @@ sqr = Math.Sqrt(sqr)*/
             // Обновляем график
             VejbZedGraph.Invalidate();
 
+            ALabel.Content = "a = " + A.ToString();
+            BLabel.Content = "b = " + B.ToString();
             D[10] = CountDVejb(A, B);
         }
 
@@ -356,6 +373,13 @@ sqr = Math.Sqrt(sqr)*/
             // Обновляем график
             NormZedGraph.Invalidate();
 
+            T52Label.Content = "T = " + T2.ToString();
+            Q52Label.Content = "q = " + q2.ToString();
+            T53Label.Content = "T = " + T3.ToString();
+            Q53Label.Content = "q = " + q3.ToString();
+            T54Label.Content = "T = " + T4.ToString();
+            Q54Label.Content = "q = " + q4.ToString();
+
             D[11] = CountDNorm(q1, T1);
             D[12] = CountDNorm(q2, T2);
             D[13] = CountDNorm(q3, T3);
@@ -394,6 +418,9 @@ sqr = Math.Sqrt(sqr)*/
             ShortNormZedGraph.AxisChange();
             // Обновляем график
             ShortNormZedGraph.Invalidate();
+
+            T6Label.Content = "T = " + T.ToString();
+            Q6Label.Content = "q = " + q.ToString();
 
             D[15] = CountDShortNorm(q, T, C);
         }
@@ -460,6 +487,8 @@ sqr = Math.Sqrt(sqr)*/
                 D += Math.Pow(temp, 2);
             }
             D /= K;
+            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+                D = 100;
             return D;
         }
 
@@ -473,6 +502,8 @@ sqr = Math.Sqrt(sqr)*/
                 D += Math.Pow(temp, 2);
             }
             D /= K;
+            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+                D = 100;
             return D;
         }
 
@@ -486,6 +517,8 @@ sqr = Math.Sqrt(sqr)*/
                 D += Math.Pow(temp, 2);
             }
             D /= K;
+            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+                D = 100;
             return D;
         }
 
@@ -501,6 +534,8 @@ sqr = Math.Sqrt(sqr)*/
                 D += Math.Pow(temp, 2);
             }
             D /= K;
+            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+                D = 100;
             return D;
         }
 
@@ -516,6 +551,8 @@ sqr = Math.Sqrt(sqr)*/
                 D += Math.Pow(temp, 2);
             }
             D /= K;
+            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+                D = 100;
             return D;
         }
 
@@ -531,58 +568,108 @@ sqr = Math.Sqrt(sqr)*/
                 D += Math.Pow(temp, 2);
             }
             D /= K;
+            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+                D = 100;
             return D;
         }
 
         void ShowD()
         {
             double min = D.Min();
-            D11Label.Content += D[0].ToString();
+            if (D[0] == 100)
+                D11Label.Content += "--";
+            else
+                D11Label.Content += D[0].ToString();
             if (D[0] == min)
                 D11Label.Foreground = Brushes.Red;
-            D12Label.Content += D[1].ToString();
+            if (D[1] == 100)
+                D12Label.Content += "--";
+            else
+                D12Label.Content += D[1].ToString();
             if (D[1] == min)
                 D12Label.Foreground = Brushes.Red;
-            D13Label.Content += D[2].ToString();
+            if (D[2] == 100)
+                D13Label.Content += "--";
+            else
+                D13Label.Content += D[2].ToString();
             if (D[2] == min)
                 D13Label.Foreground = Brushes.Red;
-            D21Label.Content += D[3].ToString();
+            if (D[3] == 100)
+                D21Label.Content += "--";
+            else
+                D21Label.Content += D[3].ToString();
             if (D[3] == min)
                 D21Label.Foreground = Brushes.Red;
-            D22Label.Content += D[4].ToString();
+            if (D[4] == 100)
+                D22Label.Content += "--";
+            else
+                D22Label.Content += D[4].ToString();
             if (D[4] == min)
                 D22Label.Foreground = Brushes.Red;
-            D23Label.Content += D[5].ToString();
+            if (D[5] == 100)
+                D23Label.Content += "--";
+            else
+                D23Label.Content += D[5].ToString();
             if (D[5] == min)
                 D23Label.Foreground = Brushes.Red;
-            D31Label.Content += D[6].ToString();
+            if (D[6] == 100)
+                D31Label.Content += "--";
+            else
+                D31Label.Content += D[6].ToString();
             if (D[6] == min)
                 D31Label.Foreground = Brushes.Red;
-            D32Label.Content += D[7].ToString();
+            if (D[7] == 100)
+                D32Label.Content += "--";
+            else
+                D32Label.Content += D[7].ToString();
             if (D[7] == min)
                 D32Label.Foreground = Brushes.Red;
-            D33Label.Content += D[8].ToString();
+            if (D[8] == 100)
+                D33Label.Content += "--";
+            else
+                D33Label.Content += D[8].ToString();
             if (D[8] == min)
                 D33Label.Foreground = Brushes.Red;
-            D34Label.Content += D[9].ToString();
+            if (D[9] == 100)
+                D34Label.Content += "--";
+            else
+                D34Label.Content += D[9].ToString();
             if (D[9] == min)
                 D34Label.Foreground = Brushes.Red;
-            D4Label.Content += D[10].ToString();
+            if (D[10] == 100)
+                D4Label.Content += "--";
+            else
+                D4Label.Content += D[10].ToString();
             if (D[10] == min)
                 D4Label.Foreground = Brushes.Red;
-            D51Label.Content += D[11].ToString();
+            if (D[11] == 100)
+                D51Label.Content += "--";
+            else
+                D51Label.Content += D[11].ToString();
             if (D[11] == min)
                 D51Label.Foreground = Brushes.Red;
-            D52Label.Content += D[12].ToString();
+            if (D[12] == 100)
+                D52Label.Content += "--";
+            else
+                D52Label.Content += D[12].ToString();
             if (D[12] == min)
                 D52Label.Foreground = Brushes.Red;
-            D53Label.Content += D[13].ToString();
+            if (D[13] == 100)
+                D53Label.Content += "--";
+            else
+                D53Label.Content += D[13].ToString();
             if (D[13] == min)
                 D53Label.Foreground = Brushes.Red;
-            D54Label.Content += D[14].ToString();
+            if (D[14] == 100)
+                D54Label.Content += "--";
+            else
+                D54Label.Content += D[14].ToString();
             if (D[14] == min)
                 D54Label.Foreground = Brushes.Red;
-            D6Label.Content += D[15].ToString();
+            if (D[15] == 100)
+                D6Label.Content += "--";
+            else
+                D6Label.Content += D[15].ToString();
             if (D[15] == min)
                 D6Label.Foreground = Brushes.Red;
             AnswDLabel.Content = min.ToString();
@@ -621,6 +708,84 @@ sqr = Math.Sqrt(sqr)*/
                 result += Math.Exp(-(x * x) / 2) * s * 2;
             }
             return result;
+        }
+
+        void Clear()
+        {
+            ZedGraphControl ExpZedGraph = ExpWFH.Child as ZedGraphControl;
+            ZedGraphControl ErlZedGraph = ErlWFH.Child as ZedGraphControl;
+            ZedGraphControl RelZedGraph = RelWFH.Child as ZedGraphControl;
+            ZedGraphControl VejbZedGraph = VejbWFH.Child as ZedGraphControl;
+            ZedGraphControl NormZedGraph = NormWFH.Child as ZedGraphControl;
+            ZedGraphControl ShortNormZedGraph = ShortNormWFH.Child as ZedGraphControl;
+            GraphPane pane = ExpZedGraph.GraphPane;
+            pane.CurveList.Clear();
+            pane = ErlZedGraph.GraphPane;
+            pane.CurveList.Clear();
+            pane = RelZedGraph.GraphPane;
+            pane.CurveList.Clear();
+            pane = VejbZedGraph.GraphPane;
+            pane.CurveList.Clear();
+            pane = NormZedGraph.GraphPane;
+            pane.CurveList.Clear();
+            pane = ShortNormZedGraph.GraphPane;
+            pane.CurveList.Clear();
+
+
+            D11Label.Content = "D11 = ";
+            D11Label.Foreground = Brushes.Black;
+            D12Label.Content = "D12 = ";
+            D12Label.Foreground = Brushes.Black;
+            D13Label.Content = "D13 = ";
+            D13Label.Foreground = Brushes.Black;
+            D21Label.Content = "D21 = ";
+            D21Label.Foreground = Brushes.Black;
+            D22Label.Content = "D22 = ";
+            D22Label.Foreground = Brushes.Black;
+            D23Label.Content = "D23 = ";
+            D23Label.Foreground = Brushes.Black;
+            D31Label.Content = "D31 = ";
+            D31Label.Foreground = Brushes.Black;
+            D32Label.Content = "D32 = ";
+            D32Label.Foreground = Brushes.Black;
+            D33Label.Content = "D33 = ";
+            D33Label.Foreground = Brushes.Black;
+            D34Label.Content = "D34 = ";
+            D34Label.Foreground = Brushes.Black;
+            D4Label.Content = "D4 = ";
+            D4Label.Foreground = Brushes.Black;
+            D51Label.Content = "D51 = ";
+            D51Label.Foreground = Brushes.Black;
+            D52Label.Content = "D52 = ";
+            D52Label.Foreground = Brushes.Black;
+            D53Label.Content = "D53 = ";
+            D53Label.Foreground = Brushes.Black;
+            D54Label.Content = "D54 = ";
+            D54Label.Foreground = Brushes.Black;
+            D6Label.Content = "D6 = ";
+            D6Label.Foreground = Brushes.Black;
+            AnswDLabel.Content = "";
+
+            A11Label.Content = "";
+            A12Label.Content = "";
+            A13Label.Content = "";
+            A21Label.Content = "";
+            A22Label.Content = "";
+            A23Label.Content = "";
+            A31Label.Content = "";
+            A32Label.Content = "";
+            A33Label.Content = "";
+            A34Label.Content = "";
+            T52Label.Content = "";
+            Q52Label.Content = "";
+            T53Label.Content = "";
+            Q53Label.Content = "";
+            T54Label.Content = "";
+            Q54Label.Content = "";
+            T6Label.Content = "";
+            Q6Label.Content = "";
+            ALabel.Content = "";
+            BLabel.Content = "";
         }
     }
 }
