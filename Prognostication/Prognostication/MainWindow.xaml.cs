@@ -208,8 +208,10 @@ sqr = (CountLambda(i) - CountLambda(i - 1)) / dt;
 if (sqr < 0)
     sqr *= -1;
 sqr = Math.Sqrt(sqr)*/
-                a3 += (1.0 / K) * sqr / (1 - (i + 1 - 0.5) * dt * sqr);
+                a3 += sqr / (1 - (i + 1 - 0.5) * dt * sqr);
+               // a3 += sqr / Math.Abs((1 - (i + 1 - 0.5) * dt * sqr));
             }
+            a3 /= K;
             ZedGraphControl ErlZedGraph = ErlWFH.Child as ZedGraphControl;
             GraphPane pane = ErlZedGraph.GraphPane;
             pane.CurveList.Clear();
@@ -374,11 +376,11 @@ sqr = Math.Sqrt(sqr)*/
             NormZedGraph.Invalidate();
 
             T52Label.Content = "T = " + T2.ToString();
-            Q52Label.Content = "q = " + q2.ToString();
+            Q52Label.Content = "σ = " + q2.ToString();
             T53Label.Content = "T = " + T3.ToString();
-            Q53Label.Content = "q = " + q3.ToString();
+            Q53Label.Content = "σ = " + q3.ToString();
             T54Label.Content = "T = " + T4.ToString();
-            Q54Label.Content = "q = " + q4.ToString();
+            Q54Label.Content = "σ = " + q4.ToString();
 
             D[11] = CountDNorm(q1, T1);
             D[12] = CountDNorm(q2, T2);
@@ -420,7 +422,7 @@ sqr = Math.Sqrt(sqr)*/
             ShortNormZedGraph.Invalidate();
 
             T6Label.Content = "T = " + T.ToString();
-            Q6Label.Content = "q = " + q.ToString();
+            Q6Label.Content = "σ = " + q.ToString();
 
             D[15] = CountDShortNorm(q, T, C);
         }
@@ -479,6 +481,7 @@ sqr = Math.Sqrt(sqr)*/
 
         double CountDExp(double a)
         {
+            /*
             Double D = 0;
             Double temp;
             for (int i = 1; i <= K; i++)
@@ -489,11 +492,23 @@ sqr = Math.Sqrt(sqr)*/
             D /= K;
             if (D.ToString() == "NaN" || D.ToString() == "Infinity")
                 D = 100;
+            return D;*/
+            Double D = 0;
+            Double temp;
+            for (int i = 1; i <= K; i++)
+            {
+                temp = Math.Exp(-a * (i - 0.5) * dt) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
+                D += Math.Pow(temp, 2);
+            }
+            D /= K;
+            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+                D = 100;
             return D;
         }
 
         double CountDErl(double a)
         {
+            /*
             Double D = 0;
             Double temp;
             for (int i = 1; i <= K; i++)
@@ -504,16 +519,38 @@ sqr = Math.Sqrt(sqr)*/
             D /= K;
             if (D.ToString() == "NaN" || D.ToString() == "Infinity")
                 D = 100;
+            return D;*/
+            Double D = 0;
+            Double temp;
+            for (int i = 1; i <= K; i++)
+            {
+                temp = (1 + a * (i - 0.5) * dt) * Math.Exp(-a * (i - 0.5) * dt) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
+                D += Math.Pow(temp, 2);
+            }
+            D /= K;
+            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+                D = 100;
             return D;
         }
 
         double CountDRel(double a)
         {
-            Double D = 0;
+            /*Double D = 0;
             Double temp;
             for (int i = 1; i <= K; i++)
             {
                 temp = 2 * a * (i - 0.5) * dt * Math.Exp(-a * (i - 0.5) * (i - 0.5) * dt * dt) - ResCol[i - 1].ni / (N0 * dt);
+                D += Math.Pow(temp, 2);
+            }
+            D /= K;
+            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+                D = 100;
+            return D;*/
+            Double D = 0;
+            Double temp;
+            for (int i = 1; i <= K; i++)
+            {
+                temp = Math.Exp(-a * (i - 0.5) * (i - 0.5) * dt * dt) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
                 D += Math.Pow(temp, 2);
             }
             D /= K;
@@ -524,7 +561,7 @@ sqr = Math.Sqrt(sqr)*/
 
         double CountDVejb(double a, double b)
         {
-            Double D = 0;
+           /* Double D = 0;
             Double temp;
             Double t;
             for (int i = 1; i <= K; i++)
@@ -536,12 +573,23 @@ sqr = Math.Sqrt(sqr)*/
             D /= K;
             if (D.ToString() == "NaN" || D.ToString() == "Infinity")
                 D = 100;
+            return D;*/
+            Double D = 0;
+            Double temp;
+            for (int i = 1; i <= K; i++)
+            {
+                temp = Math.Exp(-a * Math.Pow(((i - 0.5) * dt), b)) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
+                D += Math.Pow(temp, 2);
+            }
+            D /= K;
+            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+                D = 100;
             return D;
         }
 
         double CountDNorm(double q, double T)
         {
-            Double D = 0;
+            /*Double D = 0;
             Double temp;
             Double t;
             for (int i = 1; i <= K; i++)
@@ -553,18 +601,40 @@ sqr = Math.Sqrt(sqr)*/
             D /= K;
             if (D.ToString() == "NaN" || D.ToString() == "Infinity")
                 D = 100;
+            return D;*/
+            Double D = 0;
+            Double temp;
+            for (int i = 1; i <= K; i++)
+            {
+                temp = 0.5 - FLaplas(((i - 0.5) * dt - T) / q) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
+                D += Math.Pow(temp, 2);
+            }
+            D /= K;
+            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+                D = 100;
             return D;
         }
 
         double CountDShortNorm(double q, double T, double C)
         {
-            Double D = 0;
+           /* Double D = 0;
             Double temp;
             Double t;
             for (int i = 1; i <= K; i++)
             {
                 t = (i - 0.5) * dt;
                 temp = C / (q * Math.Sqrt(2 * Math.PI)) * Math.Exp(-(t - T) * (t - T) / (2 * q * q)) - ResCol[i - 1].ni / (N0 * dt);
+                D += Math.Pow(temp, 2);
+            }
+            D /= K;
+            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+                D = 100;
+            return D;*/
+            Double D = 0;
+            Double temp;
+            for (int i = 1; i <= K; i++)
+            {
+                temp = C * (0.5 - FLaplas(((i - 0.5) * dt - T) / q)) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
                 D += Math.Pow(temp, 2);
             }
             D /= K;
@@ -577,97 +647,149 @@ sqr = Math.Sqrt(sqr)*/
         {
             double min = D.Min();
             if (D[0] == 100)
+            {
                 D11Label.Content += "--";
+                A11Label.Content = "";
+            }
             else
                 D11Label.Content += D[0].ToString();
             if (D[0] == min)
                 D11Label.Foreground = Brushes.Red;
             if (D[1] == 100)
+            {
                 D12Label.Content += "--";
+                A12Label.Content = "";
+            }
             else
                 D12Label.Content += D[1].ToString();
             if (D[1] == min)
                 D12Label.Foreground = Brushes.Red;
             if (D[2] == 100)
+            {
                 D13Label.Content += "--";
+                A13Label.Content = "";
+            }
             else
                 D13Label.Content += D[2].ToString();
             if (D[2] == min)
                 D13Label.Foreground = Brushes.Red;
             if (D[3] == 100)
+            {
                 D21Label.Content += "--";
+                A21Label.Content = "";
+            }
             else
                 D21Label.Content += D[3].ToString();
             if (D[3] == min)
                 D21Label.Foreground = Brushes.Red;
             if (D[4] == 100)
+            {
                 D22Label.Content += "--";
+                A22Label.Content = "";
+            }
             else
                 D22Label.Content += D[4].ToString();
             if (D[4] == min)
                 D22Label.Foreground = Brushes.Red;
             if (D[5] == 100)
+            {
                 D23Label.Content += "--";
+                A23Label.Content = "";
+            }
             else
                 D23Label.Content += D[5].ToString();
             if (D[5] == min)
                 D23Label.Foreground = Brushes.Red;
             if (D[6] == 100)
+            {
                 D31Label.Content += "--";
+                A31Label.Content = "";
+            }
             else
                 D31Label.Content += D[6].ToString();
             if (D[6] == min)
                 D31Label.Foreground = Brushes.Red;
             if (D[7] == 100)
+            {
                 D32Label.Content += "--";
+                A32Label.Content = "";
+            }
             else
                 D32Label.Content += D[7].ToString();
             if (D[7] == min)
                 D32Label.Foreground = Brushes.Red;
             if (D[8] == 100)
+            {
                 D33Label.Content += "--";
+                A33Label.Content = "";
+            }
             else
                 D33Label.Content += D[8].ToString();
             if (D[8] == min)
                 D33Label.Foreground = Brushes.Red;
             if (D[9] == 100)
+            {
                 D34Label.Content += "--";
+                A34Label.Content = "";
+            }
             else
                 D34Label.Content += D[9].ToString();
             if (D[9] == min)
                 D34Label.Foreground = Brushes.Red;
             if (D[10] == 100)
+            {
                 D4Label.Content += "--";
+                ALabel.Content = "";
+                BLabel.Content = "";
+            }
             else
                 D4Label.Content += D[10].ToString();
             if (D[10] == min)
                 D4Label.Foreground = Brushes.Red;
             if (D[11] == 100)
+            {
                 D51Label.Content += "--";
+            }
             else
                 D51Label.Content += D[11].ToString();
             if (D[11] == min)
                 D51Label.Foreground = Brushes.Red;
             if (D[12] == 100)
+            {
                 D52Label.Content += "--";
+                T52Label.Content = "";
+                Q52Label.Content = "";
+            }
             else
                 D52Label.Content += D[12].ToString();
             if (D[12] == min)
                 D52Label.Foreground = Brushes.Red;
             if (D[13] == 100)
+            {
                 D53Label.Content += "--";
+                T53Label.Content = "";
+                Q53Label.Content = "";
+            }
             else
                 D53Label.Content += D[13].ToString();
             if (D[13] == min)
                 D53Label.Foreground = Brushes.Red;
             if (D[14] == 100)
+            {
                 D54Label.Content += "--";
+                T54Label.Content = "";
+                Q54Label.Content = "";
+            }
             else
                 D54Label.Content += D[14].ToString();
             if (D[14] == min)
                 D54Label.Foreground = Brushes.Red;
             if (D[15] == 100)
+            {
                 D6Label.Content += "--";
+                T6Label.Content = "";
+                Q6Label.Content = "";
+            }
             else
                 D6Label.Content += D[15].ToString();
             if (D[15] == min)
