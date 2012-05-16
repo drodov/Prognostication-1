@@ -8,8 +8,8 @@ namespace Prognostication
     class Results
     {
         public int i { set; get; }
-        public int ni { set; get; }
-        public Results(int ii, int Ni)
+        public double ni { set; get; }
+        public Results(int ii, double Ni)
         {
             i = ii;
             ni = Ni;
