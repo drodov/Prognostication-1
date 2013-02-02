@@ -1,16 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Collections.ObjectModel;
 using ZedGraph;
 
@@ -21,60 +13,70 @@ namespace Prognostication
     /// </summary>
     public partial class MainWindow : Window
     {
-        double DELTA = 0.0001;
+        double _delta = 0.0001;
         Int32 K, N0 = 100;
-        Double[] P;
-        Double dt, M1, M2, S;
-        Double[] D = new Double[16];  // D*
-        Double[] DD = new Double[16]; // D
-        ObservableCollection<Results> ResCol = new ObservableCollection<Results>();
-        ObservableCollection<Results> temp;
+        double[] P;
+        double dt, M1, M2, S;
+        double[] D = new double[16];  // D*
+        double[] DD = new double[16]; // D
+        ObservableCollection<Results> _resultCollection = new ObservableCollection<Results>();
+        ObservableCollection<Results> _tempResultCollection;
+
         public MainWindow()
         {
             InitializeComponent();
-            ZedGraphControl ExpZedGraph = ExpWFH.Child as ZedGraphControl;
-            ZedGraphControl ErlZedGraph = ErlWFH.Child as ZedGraphControl;
-            ZedGraphControl RelZedGraph = RelWFH.Child as ZedGraphControl;
-            ZedGraphControl VejbZedGraph = VejbWFH.Child as ZedGraphControl;
-            ZedGraphControl NormZedGraph = NormWFH.Child as ZedGraphControl;
-            ZedGraphControl ShortNormZedGraph = ShortNormWFH.Child as ZedGraphControl;
-            ExpZedGraph.GraphPane.Title.Text = "Экспоненциальный закон";
-            ExpZedGraph.GraphPane.XAxis.Title.Text = "t";
-            ExpZedGraph.GraphPane.YAxis.Title.Text = "P";
-            ErlZedGraph.GraphPane.Title.Text = "Закон Эрланга";
-            ErlZedGraph.GraphPane.XAxis.Title.Text = "t";
-            ErlZedGraph.GraphPane.YAxis.Title.Text = "P";
-            RelZedGraph.GraphPane.Title.Text = "Закон Рэлея";
-            RelZedGraph.GraphPane.XAxis.Title.Text = "t";
-            RelZedGraph.GraphPane.YAxis.Title.Text = "P";
-            VejbZedGraph.GraphPane.Title.Text = "Закон Вейбулла";
-            VejbZedGraph.GraphPane.XAxis.Title.Text = "t";
-            VejbZedGraph.GraphPane.YAxis.Title.Text = "P";
-            NormZedGraph.GraphPane.Title.Text = "Нормальный закон";
-            NormZedGraph.GraphPane.XAxis.Title.Text = "t";
-            NormZedGraph.GraphPane.YAxis.Title.Text = "P";
-            ShortNormZedGraph.GraphPane.Title.Text = "Усеченный нормальный закон";
-            ShortNormZedGraph.GraphPane.XAxis.Title.Text = "t";
-            ShortNormZedGraph.GraphPane.YAxis.Title.Text = "P";
-            dataGrid1.ItemsSource = ResCol;
+
+            var expZedGraph = (ZedGraphControl)ExpWFH.Child;
+            expZedGraph.GraphPane.Title.Text = "Экспоненциальный закон";
+            expZedGraph.GraphPane.XAxis.Title.Text = "t";
+            expZedGraph.GraphPane.YAxis.Title.Text = "P";
+            
+            var erlZedGraph = (ZedGraphControl)ErlWFH.Child;
+            erlZedGraph.GraphPane.Title.Text = "Закон Эрланга";
+            erlZedGraph.GraphPane.XAxis.Title.Text = "t";
+            erlZedGraph.GraphPane.YAxis.Title.Text = "P";
+            
+            var relZedGraph = (ZedGraphControl)RelWFH.Child;
+            relZedGraph.GraphPane.Title.Text = "Закон Рэлея";
+            relZedGraph.GraphPane.XAxis.Title.Text = "t";
+            relZedGraph.GraphPane.YAxis.Title.Text = "P";
+
+            var vejbZedGraph = (ZedGraphControl)VejbWFH.Child;
+            vejbZedGraph.GraphPane.Title.Text = "Закон Вейбулла";
+            vejbZedGraph.GraphPane.XAxis.Title.Text = "t";
+            vejbZedGraph.GraphPane.YAxis.Title.Text = "P";
+
+            var normZedGraph = (ZedGraphControl)NormWFH.Child;
+            normZedGraph.GraphPane.Title.Text = "Нормальный закон";
+            normZedGraph.GraphPane.XAxis.Title.Text = "t";
+            normZedGraph.GraphPane.YAxis.Title.Text = "P";
+
+            var shortNormZedGraph = (ZedGraphControl)ShortNormWFH.Child;
+            shortNormZedGraph.GraphPane.Title.Text = "Усеченный нормальный закон";
+            shortNormZedGraph.GraphPane.XAxis.Title.Text = "t";
+            shortNormZedGraph.GraphPane.YAxis.Title.Text = "P";
+            
+            dataGrid1.ItemsSource = _resultCollection;
         }
 
         private void KTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             Int32.TryParse(KTextBox.Text, out K);
             if (K < 1)
+            {
                 return;
-            temp = ResCol;
-            ResCol = new ObservableCollection<Results>();
-            // ResCol.Clear();
+            }
+
+            _tempResultCollection = _resultCollection;
+            _resultCollection = new ObservableCollection<Results>();
+            // _resultCollection.Clear();
             for (int i = 1; i <= K; i++)
             {
-                if (temp.Count >= i)
-                    ResCol.Add(new Results(i, temp[i - 1].ni));
-                else
-                    ResCol.Add(new Results(i));
+                _resultCollection.Add(_tempResultCollection.Count >= i
+                               ? new Results(i, _tempResultCollection[i - 1].Ni)
+                               : new Results(i));
             }
-            dataGrid1.ItemsSource = ResCol;
+            dataGrid1.ItemsSource = _resultCollection;
         }
 
         private void StartButton_Click(object sender, RoutedEventArgs e)
@@ -85,17 +87,13 @@ namespace Prognostication
                 M1 = 0;
                 M2 = 0;
                 S = 0;
-                double ni = 0;
-                for (int i = 0; i < ResCol.Count; i++)
-                {
-                    ni += ResCol[i].ni;
-                }
+                double ni = _resultCollection.Sum(res => res.Ni);
                 if (ni != N0)
                 {
-                    MessageBox.Show("Сумма ni не равна N0.");
+                    MessageBox.Show(string.Format("Сумма ni ({0}) не равна N0 (100).", ni));
                     return;
                 }
-                Double.TryParse(dtTextBox.Text, out dt);
+                double.TryParse(dtTextBox.Text, out dt);
                 if (dt == 0 || dt <= 0)
                 {
                     MessageBox.Show("Неправильно указано время dt.\n(Пример: 10,1)");
@@ -105,7 +103,7 @@ namespace Prognostication
                 {
                     if ((int)dt / i == 0)
                     {
-                        DELTA *= i;
+                        _delta *= i;
                         break;
                     }
                 }
@@ -115,11 +113,11 @@ namespace Prognostication
                     MessageBox.Show("Неправильно указано число интервалов K либо оно мало.");
                     return;
                 }
-                P = new Double[K];
+                P = new double[K];
                 for (int i = 0; i < K; i++)
                 {
-                    M1 += (double)(i + 1 - 0.5) * ResCol[i].ni;
-                    M2 += Math.Pow((double)(i + 1 - 0.5), 2) * ResCol[i].ni;
+                    M1 += (i + 1 - 0.5) * _resultCollection[i].Ni;
+                    M2 += Math.Pow(i + 1 - 0.5, 2) * _resultCollection[i].Ni;
                     P[i] = CountProbability(i);
                 }
                 M1 = M1 * dt / N0;
@@ -141,7 +139,7 @@ namespace Prognostication
             }
         }
 
-        double CountNi(int idx)
+        private double CountNi(int idx)
         {
             idx--;
             if (idx < 0)
@@ -149,68 +147,70 @@ namespace Prognostication
             double Ni = N0;
             for (int i = 0; i < idx + 1; i++)
             {
-                Ni -= ResCol[i].ni;
+                Ni -= _resultCollection[i].Ni;
             }
             return Ni;
         }
 
-        double CountProbability(int i)
+        private double CountProbability(int i)
         {
             int i1 = i;
             int i2 = i + 1;
-            return (double)(CountNi(i1) + CountNi(i2)) / (2.0 * N0);
+            return (CountNi(i1) + CountNi(i2)) / (2.0 * N0);
         }
 
-        double CountLambda(int i)
+        private double CountLambda(int i)
         {
             if (i < 0)
+            {
                 return 0;
+            }
             int i1 = i;
             int i2 = i + 1;
-            return (double)(2.0 * ResCol[i].ni / (dt * (CountNi(i1) + CountNi(i2))));
+            return 2.0 * _resultCollection[i].Ni / (dt * (CountNi(i1) + CountNi(i2)));
         }
 
-        double CountF(int i)
+        private double CountF(int i)
         {
             i--;
-            return ((double)ResCol[i].ni / (N0 * dt));
+            return _resultCollection[i].Ni / (N0 * dt);
         }
 
-        void DrawExpGraphics()
+        private void DrawExpGraphics()
         {
-            double t, a1, a2, a3 = 0;
-            a1 = 1.0 / M1;
-            a2 = Math.Sqrt(2.0 / M2);
+            double a3 = 0;
+            double a1 = 1.0 / M1;
+            double a2 = Math.Sqrt(2.0 / M2);
             for (int i = 0; i < K; i++)
             {
-                a3 += ((double)(ResCol[i].ni)) / (CountNi(i) + CountNi(i + 1));
+                a3 += _resultCollection[i].Ni / (CountNi(i) + CountNi(i + 1));
             }
             a3 = a3 * 2.0 / (K * dt);
-            ZedGraphControl ExpZedGraph = ExpWFH.Child as ZedGraphControl;
-            GraphPane pane = ExpZedGraph.GraphPane;
+            var expZedGraph = (ZedGraphControl)ExpWFH.Child;
+            GraphPane pane = expZedGraph.GraphPane;
             pane.CurveList.Clear();
-            PointPairList list0 = new PointPairList();
-            PointPairList list1 = new PointPairList();
-            PointPairList list2 = new PointPairList();
-            PointPairList list3 = new PointPairList();
+            var list0 = new PointPairList();
+            var list1 = new PointPairList();
+            var list2 = new PointPairList();
+            var list3 = new PointPairList();
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                t = (ResCol[i].i - 0.5) * dt;
+                double t = (_resultCollection[i].I - 0.5) * dt;
                 list0.Add(t, P[i]);
                 list1.Add(t, FuncLowExp(a1, t));
                 list2.Add(t, FuncLowExp(a2, t));
                 list3.Add(t, FuncLowExp(a3, t));
             }
-            LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
-            LineItem Curve1 = pane.AddCurve("a11", list1, System.Drawing.Color.Black, SymbolType.None);
-            LineItem Curve2 = pane.AddCurve("a12", list2, System.Drawing.Color.Green, SymbolType.None);
-            LineItem Curve3 = pane.AddCurve("a13", list3, System.Drawing.Color.Blue, SymbolType.None);
-            ExpZedGraph.AxisChange();
+            pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
+            pane.AddCurve("a11", list1, System.Drawing.Color.Black, SymbolType.None);
+            pane.AddCurve("a12", list2, System.Drawing.Color.Green, SymbolType.None);
+            pane.AddCurve("a13", list3, System.Drawing.Color.Blue, SymbolType.None);
+            expZedGraph.AxisChange();
             // Обновляем график
-            ExpZedGraph.Invalidate();
+            expZedGraph.Invalidate();
 
-            if (a1.ToString() == "NaN" || a1.ToString() == "Infinity")
+            if (double.IsInfinity(a1) || double.IsNaN(a1))
             {
                 A11Label.Content = "a11 = --";
                 D[0] = 100;
@@ -222,7 +222,7 @@ namespace Prognostication
                 D[0] = CountDExp(a1);
                 DD[0] = CountDDExp(a1);
             }
-            if (a2.ToString() == "NaN" || a2.ToString() == "Infinity")
+            if (double.IsInfinity(a2) || double.IsNaN(a2))
             {
                 A12Label.Content = "a12 = --";
                 D[1] = 100;
@@ -234,7 +234,7 @@ namespace Prognostication
                 D[1] = CountDExp(a2);
                 DD[1] = CountDDExp(a2);
             }
-            if (a3.ToString() == "NaN" || a3.ToString() == "Infinity")
+            if (double.IsInfinity(a3) || double.IsNaN(a3))
             {
                 A13Label.Content = "a13 = --";
                 D[2] = 100;
@@ -248,48 +248,58 @@ namespace Prognostication
             }
         }
 
-        void DrawErlGraphics()
+        private void DrawErlGraphics()
         {
-            double t, a1, a2, a3 = 0, sqr;
-            a1 = 2.0 / M1;
-            a2 = Math.Sqrt(6.0 / M2);
+            double a1 = 2.0 / M1;
+            
+            double a2 = Math.Sqrt(6.0 / M2);
+
+            double a3 = 0;
             for (int i = 0; i < K; i++)
             {
-                sqr = Math.Sqrt((CountLambda(i) - CountLambda(i - 1)) / dt);/*
-sqr = (CountLambda(i) - CountLambda(i - 1)) / dt;
-if (sqr < 0)
-    sqr *= -1;
-sqr = Math.Sqrt(sqr)*/
+                double sqr = Math.Sqrt((CountLambda(i) - CountLambda(i - 1)) / dt);
                 a3 += sqr / Math.Abs((1 - (i + 1 - 0.5) * dt * sqr));
-                // a3 += sqr / Math.Abs((1 - (i + 1 - 0.5) * dt * sqr));
             }
             a3 /= K;
-            ZedGraphControl ErlZedGraph = ErlWFH.Child as ZedGraphControl;
-            GraphPane pane = ErlZedGraph.GraphPane;
+// статья
+            //double a4 = 0;
+            //for (int i = 0; i < K - 1; i++)
+            //{
+            //    a4 += (CountLambda(i) / (i + 1 - 0.5) - (CountLambda(i + 1) - CountLambda(i))) / ((i + 1 + 0.5) * (CountLambda(i + 1) - CountLambda(i)));
+            //}
+            //a4 /= ((K - 1) * dt);
+//
+            var erlZedGraph = (ZedGraphControl)ErlWFH.Child;
+            GraphPane pane = erlZedGraph.GraphPane;
             pane.CurveList.Clear();
-            PointPairList list0 = new PointPairList();
-            PointPairList list1 = new PointPairList();
-            PointPairList list2 = new PointPairList();
-            PointPairList list3 = new PointPairList();
+            var list0 = new PointPairList();
+            var list1 = new PointPairList();
+            var list2 = new PointPairList();
+            var list3 = new PointPairList();
+//статья
+//            var list4 = new PointPairList();
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                t = (ResCol[i].i - 0.5) * dt;
+                double t = (_resultCollection[i].I - 0.5) * dt;
                 list0.Add(t, P[i]);
                 list1.Add(t, FuncLowErl(a1, t));
                 list2.Add(t, FuncLowErl(a2, t));
                 list3.Add(t, FuncLowErl(a3, t));
+//статья
+//                list4.Add(t, FuncLowErl(a4, t));
             }
-            LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
-            LineItem Curve1 = pane.AddCurve("a21", list1, System.Drawing.Color.Black, SymbolType.None);
-            LineItem Curve2 = pane.AddCurve("a22", list2, System.Drawing.Color.Green, SymbolType.None);
-            LineItem Curve3 = pane.AddCurve("a23", list3, System.Drawing.Color.Blue, SymbolType.None);
-            ErlZedGraph.AxisChange();
+            pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
+            pane.AddCurve("a21", list1, System.Drawing.Color.Black, SymbolType.None);
+            pane.AddCurve("a22", list2, System.Drawing.Color.Green, SymbolType.None);
+            pane.AddCurve("a23", list3, System.Drawing.Color.Blue, SymbolType.None);
+//статья
+//            pane.AddCurve("a24", list4, System.Drawing.Color.Blue, SymbolType.None);
+            erlZedGraph.AxisChange();
             // Обновляем график
-            ErlZedGraph.Invalidate();
+            erlZedGraph.Invalidate();
 
-
-            if (a1.ToString() == "NaN" || a1.ToString() == "Infinity")
+            if (double.IsInfinity(a1) || double.IsNaN(a1))
             {
                 A21Label.Content = "a21 = --";
                 D[3] = 100;
@@ -301,7 +311,7 @@ sqr = Math.Sqrt(sqr)*/
                 D[3] = CountDErl(a1);
                 DD[3] = CountDDErl(a1);
             }
-            if (a2.ToString() == "NaN" || a2.ToString() == "Infinity")
+            if (double.IsInfinity(a2) || double.IsNaN(a2))
             {
                 A22Label.Content = "a22 = --";
                 D[4] = 100;
@@ -313,7 +323,7 @@ sqr = Math.Sqrt(sqr)*/
                 D[4] = CountDErl(a2);
                 DD[4] = CountDDErl(a2);
             }
-            if (a3.ToString() == "NaN" || a3.ToString() == "Infinity")
+            if (double.IsInfinity(a3) || double.IsNaN(a3))
             {
                 A23Label.Content = "a23 = --";
                 D[5] = 100;
@@ -327,45 +337,45 @@ sqr = Math.Sqrt(sqr)*/
             }
         }
 
-        void DrawRelGraphics()
+        private void DrawRelGraphics()
         {
             double t, a1, a2, a3 = 0, a4;
             a1 = Math.PI / 4 / M1 / M1;
             a2 = 1.0 / M2;
-            a4 = 1.0 / (K * dt * dt) * (ResCol[K - 1].ni / CountNi(K - 1) - (double)ResCol[0].ni / (N0 + CountNi(1)));
+            a4 = 1.0 / (K * dt * dt) * (_resultCollection[K - 1].Ni / CountNi(K - 1) - _resultCollection[0].Ni / (N0 + CountNi(1)));
             for (int i = 0; i < K; i++)
             {
-                a3 += ((double)(ResCol[i].ni)) * (i + 1 - 0.5) / (CountNi(i) + CountNi(i + 1));
+                a3 += _resultCollection[i].Ni * (i + 1 - 0.5) / (CountNi(i) + CountNi(i + 1));
             }
             a3 = a3 * 12.0 / (K * dt * dt * (4 * K * K - 1));
-            ZedGraphControl RelZedGraph = RelWFH.Child as ZedGraphControl;
-            GraphPane pane = RelZedGraph.GraphPane;
+            var relZedGraph = (ZedGraphControl)RelWFH.Child;
+            GraphPane pane = relZedGraph.GraphPane;
             pane.CurveList.Clear();
-            PointPairList list0 = new PointPairList();
-            PointPairList list1 = new PointPairList();
-            PointPairList list2 = new PointPairList();
-            PointPairList list3 = new PointPairList();
-            PointPairList list4 = new PointPairList();
+            var list0 = new PointPairList();
+            var list1 = new PointPairList();
+            var list2 = new PointPairList();
+            var list3 = new PointPairList();
+            var list4 = new PointPairList();
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                t = (ResCol[i].i - 0.5) * dt;
+                t = (_resultCollection[i].I - 0.5) * dt;
                 list0.Add(t, P[i]);
                 list1.Add(t, FuncLowRel(a1, t));
                 list2.Add(t, FuncLowRel(a2, t));
                 list3.Add(t, FuncLowRel(a3, t));
                 list4.Add(t, FuncLowRel(a4, t));
             }
-            LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
-            LineItem Curve1 = pane.AddCurve("a31", list1, System.Drawing.Color.Black, SymbolType.None);
-            LineItem Curve2 = pane.AddCurve("a32", list2, System.Drawing.Color.Green, SymbolType.None);
-            LineItem Curve3 = pane.AddCurve("a33", list3, System.Drawing.Color.Blue, SymbolType.None);
-            LineItem Curve4 = pane.AddCurve("a34", list4, System.Drawing.Color.DarkOrange, SymbolType.None);
-            RelZedGraph.AxisChange();
+            pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
+            pane.AddCurve("a31", list1, System.Drawing.Color.Black, SymbolType.None);
+            pane.AddCurve("a32", list2, System.Drawing.Color.Green, SymbolType.None);
+            pane.AddCurve("a33", list3, System.Drawing.Color.Blue, SymbolType.None);
+            pane.AddCurve("a34", list4, System.Drawing.Color.DarkOrange, SymbolType.None);
+            relZedGraph.AxisChange();
             // Обновляем график
-            RelZedGraph.Invalidate();
+            relZedGraph.Invalidate();
 
-            if (a1.ToString() == "NaN" || a1.ToString() == "Infinity")
+            if (double.IsInfinity(a1) || double.IsNaN(a1))
             {
                 A31Label.Content = "a31 = --";
                 D[6] = 100;
@@ -377,7 +387,7 @@ sqr = Math.Sqrt(sqr)*/
                 D[6] = CountDRel(a3);
                 DD[6] = CountDDRel(a3);
             }
-            if (a2.ToString() == "NaN" || a2.ToString() == "Infinity")
+            if (double.IsInfinity(a2) || double.IsNaN(a2))
             {
                 A32Label.Content = "a32 = --";
                 D[7] = 100;
@@ -389,7 +399,7 @@ sqr = Math.Sqrt(sqr)*/
                 D[7] = CountDRel(a2);
                 DD[7] = CountDDRel(a2);
             }
-            if (a3.ToString() == "NaN" || a3.ToString() == "Infinity")
+            if (double.IsInfinity(a3) || double.IsNaN(a3))
             {
                 A33Label.Content = "a33 = --";
                 D[8] = 100;
@@ -401,7 +411,7 @@ sqr = Math.Sqrt(sqr)*/
                 D[8] = CountDRel(a3);
                 DD[8] = CountDDRel(a3);
             }
-            if (a4.ToString() == "NaN" || a4.ToString() == "Infinity")
+            if (double.IsInfinity(a4) || double.IsNaN(a4))
             {
                 A34Label.Content = "a34 = --";
                 D[9] = 100;
@@ -415,9 +425,9 @@ sqr = Math.Sqrt(sqr)*/
             }
         }
 
-        void DrawVejbGraphics()
+        private void DrawVejbGraphics()
         {
-            double t, x, y, a = 0, b = 0, c = 0, d = 0, e = 0;
+            double t, x, y, a = 0, b = 0, c = 0, e = 0;
             for (int i = 0; i < K; i++)
             {
                 a += Math.Log(CountLambda(i)); // i+1
@@ -425,30 +435,30 @@ sqr = Math.Sqrt(sqr)*/
                 c += Math.Pow(Math.Log(i + 1 - 0.5) + Math.Log(dt), 2);
                 e += Math.Log(CountLambda(i)) * (Math.Log(i + 1 - 0.5) + Math.Log(dt));
             }
-            d = b * b;
             x = (a * c - b * e) / (K * c - b * b);
             y = (a * b - K * e) / (b * b - K * c);
             double B = 1 + y;
             double A = Math.Exp(x) / B;
-            ZedGraphControl VejbZedGraph = VejbWFH.Child as ZedGraphControl;
+            var VejbZedGraph = (ZedGraphControl)VejbWFH.Child;
             GraphPane pane = VejbZedGraph.GraphPane;
             pane.CurveList.Clear();
-            PointPairList list0 = new PointPairList();
-            PointPairList list1 = new PointPairList();
+            var list0 = new PointPairList();
+            var list1 = new PointPairList();
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                t = (ResCol[i].i - 0.5) * dt;
+                t = (_resultCollection[i].I - 0.5) * dt;
                 list0.Add(t, P[i]);
                 list1.Add(t, FuncLowVejb(A, B, t));
-            }//
-            LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
-            LineItem Curve1 = pane.AddCurve("a21", list1, System.Drawing.Color.Black, SymbolType.None);
+            }
+            //
+            pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
+            pane.AddCurve("a21", list1, System.Drawing.Color.Black, SymbolType.None);
             VejbZedGraph.AxisChange();
             // Обновляем график
             VejbZedGraph.Invalidate();
 
-            if (A.ToString() == "NaN" || A.ToString() == "Infinity" || B.ToString() == "NaN" || B.ToString() == "Infinity")
+            if (double.IsNaN(A) || double.IsInfinity(A) || double.IsNaN(B) || double.IsInfinity(B))
             {
                 ALabel.Content = "a = --";
                 BLabel.Content = "b = --";
@@ -464,9 +474,9 @@ sqr = Math.Sqrt(sqr)*/
             }
         }
 
-        void DrawNormGraphics()
+        private void DrawNormGraphics()
         {
-            double t, T1, T2, T3, T4 = 0, q1, q2, q3, q4 = 0, a, b = 0, g = 1, Y, X;
+            double t, T1, T2, T3, T4, q1, q2, q3, q4, a, b = 0, g = 1, Y, X;
             a = Math.Log(CountF(1) / CountF(K));
             for (int i = 1; i <= K - 1; i++)
             {
@@ -474,41 +484,41 @@ sqr = Math.Sqrt(sqr)*/
                 g *= Math.Pow(CountF(i) / CountF(i + 1), i);
             }
             g = Math.Log(g);
-            Y = (double)(K - 1) * (0.5 * K * a - g) / (a * a - b * (K - 1));
+            Y = (K - 1) * (0.5 * K * a - g) / (a * a - b * (K - 1));
             X = (0.5 * K * b * (K - 1) - g * a) / (b * (K - 1) - a * a);
             T4 = X * dt;
             q4 = Math.Sqrt(Y) * dt;
             T1 = T2 = T3 = M1;
             q1 = q2 = S;
             q3 = q1 * Math.Sqrt(2);
-            ZedGraphControl NormZedGraph = NormWFH.Child as ZedGraphControl;
-            GraphPane pane = NormZedGraph.GraphPane;
+            ZedGraphControl normZedGraph = (ZedGraphControl)NormWFH.Child;
+            GraphPane pane = normZedGraph.GraphPane;
             pane.CurveList.Clear();
-            PointPairList list0 = new PointPairList();
-            PointPairList list1 = new PointPairList();
-            PointPairList list2 = new PointPairList();
-            PointPairList list3 = new PointPairList();
-            PointPairList list4 = new PointPairList();
+            var list0 = new PointPairList();
+            var list1 = new PointPairList();
+            var list2 = new PointPairList();
+            var list3 = new PointPairList();
+            var list4 = new PointPairList();
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                t = (ResCol[i].i - 0.5) * dt;
+                t = (_resultCollection[i].I - 0.5) * dt;
                 list0.Add(t, P[i]);
                 list1.Add(t, FuncLowNorm(T1, q1, t));
                 //                list2.Add(t, FuncLowNorm(T2, q2, t));
                 list3.Add(t, FuncLowNorm(T3, q3, t));
                 list4.Add(t, FuncLowNorm(T4, q4, t));
             }
-            LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
-            LineItem Curve1 = pane.AddCurve("a51 = a52", list1, System.Drawing.Color.Black, SymbolType.None);
-            //LineItem Curve2 = pane.AddCurve("a52", list2, System.Drawing.Color.Green, SymbolType.None);
-            LineItem Curve3 = pane.AddCurve("a53", list3, System.Drawing.Color.Blue, SymbolType.None);
-            LineItem Curve4 = pane.AddCurve("a54", list4, System.Drawing.Color.Green, SymbolType.None);
-            NormZedGraph.AxisChange();
+            pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
+            pane.AddCurve("a51 = a52", list1, System.Drawing.Color.Black, SymbolType.None);
+            //pane.AddCurve("a52", list2, System.Drawing.Color.Green, SymbolType.None);
+            pane.AddCurve("a53", list3, System.Drawing.Color.Blue, SymbolType.None);
+            pane.AddCurve("a54", list4, System.Drawing.Color.Green, SymbolType.None);
+            normZedGraph.AxisChange();
             // Обновляем график
-            NormZedGraph.Invalidate();
+            normZedGraph.Invalidate();
 
-            if (q1.ToString() == "NaN" || q1.ToString() == "Infinity" || T1.ToString() == "NaN" || T1.ToString() == "Infinity")
+            if (double.IsNaN(q1) || double.IsInfinity(q1) || double.IsNaN(T1) || double.IsInfinity(T1))
             {
                 T52Label.Content = "T = --";
                 Q52Label.Content = "q = --";
@@ -526,7 +536,7 @@ sqr = Math.Sqrt(sqr)*/
                 DD[11] = CountDDNorm(q1, T1);
                 DD[12] = CountDDNorm(q2, T2);
             }
-            if (q3.ToString() == "NaN" || q3.ToString() == "Infinity" || T3.ToString() == "NaN" || T3.ToString() == "Infinity")
+            if (double.IsNaN(q3) || double.IsInfinity(q3) || double.IsNaN(T3) || double.IsInfinity(T3))
             {
                 T53Label.Content = "T = --";
                 Q53Label.Content = "q = --";
@@ -540,7 +550,7 @@ sqr = Math.Sqrt(sqr)*/
                 D[13] = CountDNorm(q3, T3);
                 DD[13] = CountDDNorm(q3, T3);
             }
-            if (q4.ToString() == "NaN" || q4.ToString() == "Infinity" || T4.ToString() == "NaN" || T4.ToString() == "Infinity")
+            if (double.IsNaN(q4) || double.IsInfinity(q4) || double.IsNaN(T4) || double.IsInfinity(T4))
             {
                 T54Label.Content = "T = --";
                 Q54Label.Content = "q = --";
@@ -556,9 +566,9 @@ sqr = Math.Sqrt(sqr)*/
             }
         }
 
-        void DrawShortNormGraphics()
+        private void DrawShortNormGraphics()
         {
-            double t, C, T = 0, q = 0, a, b = 0, g = 1, Y, X;
+            double t, C, T, q, a, b = 0, g = 1, Y, X;
             a = Math.Log(CountF(1) / CountF(K));
             for (int i = 1; i < K; i++)
             {
@@ -566,30 +576,30 @@ sqr = Math.Sqrt(sqr)*/
                 g *= Math.Pow(CountF(i) / CountF(i + 1), i);
             }
             g = Math.Log(g);
-            Y = (double)(K - 1) * (0.5 * K * a - g) / (a * a - b * (K - 1));
+            Y = (K - 1) * (0.5 * K * a - g) / (a * a - b * (K - 1));
             X = (0.5 * K * b * (K - 1) - g * a) / (b * (K - 1) - a * a);
             T = X * dt;
             q = Math.Sqrt(Y) * dt;
             C = 1.0 / (0.5 + FLaplas(T / q));
-            ZedGraphControl ShortNormZedGraph = ShortNormWFH.Child as ZedGraphControl;
-            GraphPane pane = ShortNormZedGraph.GraphPane;
+            ZedGraphControl shortNormZedGraph = (ZedGraphControl)ShortNormWFH.Child;
+            GraphPane pane = shortNormZedGraph.GraphPane;
             pane.CurveList.Clear();
-            PointPairList list0 = new PointPairList();
-            PointPairList list1 = new PointPairList();
+            var list0 = new PointPairList();
+            var list1 = new PointPairList();
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                t = (ResCol[i].i - 0.5) * dt;
+                t = (_resultCollection[i].I - 0.5) * dt;
                 list0.Add(t, P[i]);
                 list1.Add(t, FuncLowShortNorm(T, q, t, C));
             }
-            LineItem Curve0 = pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
-            LineItem Curve1 = pane.AddCurve("a6", list1, System.Drawing.Color.Black, SymbolType.None);
-            ShortNormZedGraph.AxisChange();
+            pane.AddCurve("Экспериментально", list0, System.Drawing.Color.Red, SymbolType.None);
+            pane.AddCurve("a6", list1, System.Drawing.Color.Black, SymbolType.None);
+            shortNormZedGraph.AxisChange();
             // Обновляем график
-            ShortNormZedGraph.Invalidate();
+            shortNormZedGraph.Invalidate();
 
-            if (q.ToString() == "NaN" || q.ToString() == "Infinity" || T.ToString() == "NaN" || T.ToString() == "Infinity")
+            if (double.IsNaN(q) || double.IsInfinity(q) || double.IsNaN(T) || double.IsInfinity(T))
             {
                 T6Label.Content = "T = --";
                 Q6Label.Content = "q = --";
@@ -605,37 +615,37 @@ sqr = Math.Sqrt(sqr)*/
             }
         }
 
-        double FuncLowExp(double a, double t)
+        private double FuncLowExp(double a, double t)
         {
             return Math.Exp(-a * t);
         }
 
-        double FuncLowErl(double a, double t)
+        private double FuncLowErl(double a, double t)
         {
             return (1 + a * t) * Math.Exp(-a * t);
         }
 
-        double FuncLowRel(double a, double t)
+        private double FuncLowRel(double a, double t)
         {
             return Math.Exp(-a * t * t);
         }
 
-        double FuncLowVejb(double a, double b, double t)
+        private double FuncLowVejb(double a, double b, double t)
         {
             return Math.Exp(-a * Math.Pow(t, b));
         }
 
-        double FuncNorm(double T, double q, double t)
+        private double FuncNorm(double T, double q, double t)
         {
             return (1 / (q * Math.Sqrt(2 * Math.PI))) * Math.Exp(-Math.Pow(t - T, 2) / (2 * Math.Pow(q, 2)));
         }
 
-        double FuncLowNorm(double T, double q, double t)
+        private double FuncLowNorm(double T, double q, double t)
         {
             return 1 - IntegralForNorm(0, t, T, q);
         }
 
-        double FuncLowShortNorm(double T, double q, double t, double C)
+        private double FuncLowShortNorm(double T, double q, double t, double C)
         {
             return C * (1 - IntegralForNorm(0, t, T, q));
         }
@@ -646,10 +656,10 @@ sqr = Math.Sqrt(sqr)*/
                    return res;
                }
        */
-        double IntegralForNorm(double lim1, double lim2, double T, double q)
+        private double IntegralForNorm(double lim1, double lim2, double T, double q)
         {
             double result = 0;
-            double s = DELTA;
+            double s = _delta;
             for (double i = lim1 + s; i <= lim2 - s; i += 2 * s)
             {
                 result += FuncNorm(T, q, i) * 2 * s;
@@ -657,21 +667,23 @@ sqr = Math.Sqrt(sqr)*/
             return result;
         }
 
-        double CountDExp(double a)
+        private double CountDExp(double a)
         {
-            Double D = 0;
-            Double temp;
+            double D = 0;
             for (int i = 1; i <= K; i++)
             {
-                temp = a * Math.Exp(-a * (i - 0.5) * dt) - ResCol[i - 1].ni / (N0 * dt);
+                double temp = a * Math.Exp(-a * (i - 0.5) * dt) - _resultCollection[i - 1].Ni / (N0 * dt);
                 D += Math.Pow(temp, 2);
             }
             D /= K;
-            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+            if (double.IsNaN(D) || double.IsInfinity(D))
+            {
                 D = 100;
-            return D;/*
-            Double D = 0;
-            Double temp;
+            }
+            return D;
+            /*
+            double D = 0;
+            double temp;
             for (int i = 1; i <= K; i++)
             {
                 temp = Math.Exp(-a * (i - 0.5) * dt) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
@@ -683,21 +695,23 @@ sqr = Math.Sqrt(sqr)*/
             return D;*/
         }
 
-        double CountDErl(double a)
+        private double CountDErl(double a)
         {
-            Double D = 0;
-            Double temp;
+            double D = 0;
             for (int i = 1; i <= K; i++)
             {
-                temp = a * a * (i - 0.5) * dt * Math.Exp(-a * (i - 0.5) * dt) - ResCol[i - 1].ni / (N0 * dt);
+                double temp = a * a * (i - 0.5) * dt * Math.Exp(-a * (i - 0.5) * dt) - _resultCollection[i - 1].Ni / (N0 * dt);
                 D += Math.Pow(temp, 2);
             }
             D /= K;
-            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+            if (double.IsNaN(D) || double.IsInfinity(D))
+            {
                 D = 100;
-            return D;/*
-            Double D = 0;
-            Double temp;
+            }
+            return D;
+            /*
+            double D = 0;
+            double temp;
             for (int i = 1; i <= K; i++)
             {
                 temp = (1 + a * (i - 0.5) * dt) * Math.Exp(-a * (i - 0.5) * dt) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
@@ -709,21 +723,23 @@ sqr = Math.Sqrt(sqr)*/
             return D;*/
         }
 
-        double CountDRel(double a)
+        private double CountDRel(double a)
         {
-            Double D = 0;
-            Double temp;
+            double D = 0;
             for (int i = 1; i <= K; i++)
             {
-                temp = 2 * a * (i - 0.5) * dt * Math.Exp(-a * (i - 0.5) * (i - 0.5) * dt * dt) - ResCol[i - 1].ni / (N0 * dt);
+                double temp = 2 * a * (i - 0.5) * dt * Math.Exp(-a * (i - 0.5) * (i - 0.5) * dt * dt) - _resultCollection[i - 1].Ni / (N0 * dt);
                 D += Math.Pow(temp, 2);
             }
             D /= K;
-            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+            if (double.IsNaN(D) || double.IsInfinity(D))
+            {
                 D = 100;
-            return D;/*
-            Double D = 0;
-            Double temp;
+            }
+            return D;
+            /*
+            double D = 0;
+            double temp;
             for (int i = 1; i <= K; i++)
             {
                 temp = Math.Exp(-a * (i - 0.5) * (i - 0.5) * dt * dt) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
@@ -737,21 +753,22 @@ sqr = Math.Sqrt(sqr)*/
 
         double CountDVejb(double a, double b)
         {
-            Double D = 0;
-            Double temp;
-            Double t;
+            double D = 0;
             for (int i = 1; i <= K; i++)
             {
-                t = (i - 0.5) * dt;
-                temp = a * b * Math.Pow(t, b - 1) * Math.Exp(-a * Math.Pow(t, b)) - ResCol[i - 1].ni / (N0 * dt);
+                double t = (i - 0.5) * dt;
+                double temp = a * b * Math.Pow(t, b - 1) * Math.Exp(-a * Math.Pow(t, b)) - _resultCollection[i - 1].Ni / (N0 * dt);
                 D += Math.Pow(temp, 2);
             }
             D /= K;
-            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+            if (double.IsNaN(D) || double.IsInfinity(D))
+            {
                 D = 100;
-            return D;/*
-            Double D = 0;
-            Double temp;
+            }
+            return D;
+            /*
+            double D = 0;
+            double temp;
             for (int i = 1; i <= K; i++)
             {
                 temp = Math.Exp(-a * Math.Pow(((i - 0.5) * dt), b)) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
@@ -765,21 +782,22 @@ sqr = Math.Sqrt(sqr)*/
 
         double CountDNorm(double q, double T)
         {
-            Double D = 0;
-            Double temp;
-            Double t;
+            double D = 0;
             for (int i = 1; i <= K; i++)
             {
-                t = (i - 0.5) * dt;
-                temp = 1 / (q * Math.Sqrt(2 * Math.PI)) * Math.Exp(-(t - T) * (t - T) / (2 * q * q)) - ResCol[i - 1].ni / (N0 * dt);
+                double t = (i - 0.5) * dt;
+                double temp = 1 / (q * Math.Sqrt(2 * Math.PI)) * Math.Exp(-(t - T) * (t - T) / (2 * q * q)) - _resultCollection[i - 1].Ni / (N0 * dt);
                 D += Math.Pow(temp, 2);
             }
             D /= K;
-            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+            if (double.IsNaN(D) || double.IsInfinity(D))
+            {
                 D = 100;
-            return D;/*
-            Double D = 0;
-            Double temp;
+            }
+            return D;
+            /*
+            double D = 0;
+            double temp;
             for (int i = 1; i <= K; i++)
             {
                 temp = 0.5 - FLaplas(((i - 0.5) * dt - T) / q) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
@@ -793,21 +811,23 @@ sqr = Math.Sqrt(sqr)*/
 
         double CountDShortNorm(double q, double T, double C)
         {
-            Double D = 0;
-            Double temp;
-            Double t;
+            double D = 0;
             for (int i = 1; i <= K; i++)
             {
-                t = (i - 0.5) * dt;
-                temp = C / (q * Math.Sqrt(2 * Math.PI)) * Math.Exp(-(t - T) * (t - T) / (2 * q * q)) - ResCol[i - 1].ni / (N0 * dt);
+                double t = (i - 0.5) * dt;
+                double temp = C/(q*Math.Sqrt(2*Math.PI))*Math.Exp(-(t - T)*(t - T)/(2*q*q)) -
+                              _resultCollection[i - 1].Ni/(N0*dt);
                 D += Math.Pow(temp, 2);
             }
             D /= K;
-            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+            if (double.IsNaN(D) || double.IsInfinity(D))
+            {
                 D = 100;
-            return D;/*
-            Double D = 0;
-            Double temp;
+            }
+            return D;
+            /*
+            double D = 0;
+            double temp;
             for (int i = 1; i <= K; i++)
             {
                 temp = C * (0.5 - FLaplas(((i - 0.5) * dt - T) / q)) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
@@ -821,97 +841,103 @@ sqr = Math.Sqrt(sqr)*/
 
         double CountDDExp(double a)
         {
-            Double D = 0;
-            Double temp;
+            double D = 0;
             for (int i = 1; i <= K; i++)
             {
-                temp = Math.Exp(-a * (i - 0.5) * dt) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
+                double temp = Math.Exp(-a * (i - 0.5) * dt) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
                 D += Math.Pow(temp, 2);
             }
             D /= K;
-            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+            if (double.IsNaN(D) || double.IsInfinity(D))
+            {
                 D = 100;
+            }
             return D;
         }
 
         double CountDDErl(double a)
         {
-            Double D = 0;
-            Double temp;
+            double D = 0;
             for (int i = 1; i <= K; i++)
             {
-                temp = (1 + a * (i - 0.5) * dt) * Math.Exp(-a * (i - 0.5) * dt) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
+                double temp = (1 + a * (i - 0.5) * dt) * Math.Exp(-a * (i - 0.5) * dt) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
                 D += Math.Pow(temp, 2);
             }
             D /= K;
-            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+            if (double.IsNaN(D) || double.IsInfinity(D))
+            {
                 D = 100;
+            }
             return D;
         }
 
         double CountDDRel(double a)
         {
-            Double D = 0;
-            Double temp;
+            double D = 0;
             for (int i = 1; i <= K; i++)
             {
-                temp = Math.Exp(-a * (i - 0.5) * (i - 0.5) * dt * dt) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
+                double temp = Math.Exp(-a * (i - 0.5) * (i - 0.5) * dt * dt) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
                 D += Math.Pow(temp, 2);
             }
             D /= K;
-            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+            if (double.IsNaN(D) || double.IsInfinity(D))
+            {
                 D = 100;
+            }
             return D;
         }
 
         double CountDDVejb(double a, double b)
         {
-            Double D = 0;
-            Double temp;
+            double D = 0;
             for (int i = 1; i <= K; i++)
             {
-                temp = Math.Exp(-a * Math.Pow(((i - 0.5) * dt), b)) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
+                double temp = Math.Exp(-a * Math.Pow(((i - 0.5) * dt), b)) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
                 D += Math.Pow(temp, 2);
             }
             D /= K;
-            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+            if (double.IsNaN(D) || double.IsInfinity(D))
+            {
                 D = 100;
+            }
             return D;
         }
 
         double CountDDNorm(double q, double T)
         {
-            Double D = 0;
-            Double temp;
+            double D = 0;
             for (int i = 1; i <= K; i++)
             {
-                temp = 0.5 - FLaplas(((i - 0.5) * dt - T) / q) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
+                double temp = 0.5 - FLaplas(((i - 0.5) * dt - T) / q) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
                 D += Math.Pow(temp, 2);
             }
             D /= K;
-            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+            if (double.IsNaN(D) || double.IsInfinity(D))
+            {
                 D = 100;
+            }
             return D;
         }
 
         double CountDDShortNorm(double q, double T, double C)
         {
-            Double D = 0;
-            Double temp;
+            double D = 0;
             for (int i = 1; i <= K; i++)
             {
-                temp = C * (0.5 - FLaplas(((i - 0.5) * dt - T) / q)) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
+                double temp = C * (0.5 - FLaplas(((i - 0.5) * dt - T) / q)) - 0.5 * (CountProbability(i - 2) + CountProbability(i - 1));
                 D += Math.Pow(temp, 2);
             }
             D /= K;
-            if (D.ToString() == "NaN" || D.ToString() == "Infinity")
+            if (double.IsInfinity(D) || double.IsNaN(D))
+            {
                 D = 100;
+            }
             return D;
         }
 
         void ShowD()
         {
-            string ans = "";
+            string ans = string.Empty;
             double min = D.Min();
             bool flagAnalys = false;
             bool flagChangLow = false;
@@ -1180,24 +1206,27 @@ sqr = Math.Sqrt(sqr)*/
                 D6Label.Foreground = Brushes.Red;
             }
 
-            if (flagAnalys == true)
+            if (flagAnalys)
                 flagChangLow = Analys();
 
-            if (flagChangLow == true)
+            if (flagChangLow)
             {
                 ans = "Усеч. нормальный";
                 MessageBox.Show("По D - нормальный закон.\nОднако, судя по данным Ni - это усеченный нормальный.");
             }
 
-            AnswDLabel.Content = "D = " + min.ToString();
+            AnswDLabel.Content = "D* = " + min.ToString();
             AnswLowLabel.Content = ans;
         }
 
-        double Factorial(int x)
+        private double Factorial(int x)
         {
             double y = 1;
             if (x == 0)
+            {
                 return 0;
+            }
+
             for (int i = x; i != 0; i--)
             {
                 y *= i;
@@ -1205,14 +1234,14 @@ sqr = Math.Sqrt(sqr)*/
             return y;
         }
 
-        double FLaplas(double x)
+        private double FLaplas(double x)
         {
-            double res = 1.0 / Math.Sqrt(2 * Math.PI) * IntegralForLaplas(0, x, x);
-            return res;
+            return 1.0 / Math.Sqrt(2 * Math.PI) * IntegralForLaplas(0, x, x);
         }
 
-        double IntegralForLaplas(double lim1, double lim2, double x)
-        {/*
+        private double IntegralForLaplas(double lim1, double lim2, double x)
+        {
+            /*
             if (lim2 < 0)
             {
                 double temp = lim2;
@@ -1220,7 +1249,7 @@ sqr = Math.Sqrt(sqr)*/
                 lim1 = temp;
             }*/
             double result = 0;
-            double s = DELTA;
+            double s = _delta;
             for (double i = lim1 + s; i <= lim2 - s; i += 2 * s)
             {
                 result += Math.Exp(-(x * x) / 2) * s * 2;
@@ -1228,25 +1257,26 @@ sqr = Math.Sqrt(sqr)*/
             return result;
         }
 
-        void Clear()
+        private void Clear()
         {
-            ZedGraphControl ExpZedGraph = ExpWFH.Child as ZedGraphControl;
-            ZedGraphControl ErlZedGraph = ErlWFH.Child as ZedGraphControl;
-            ZedGraphControl RelZedGraph = RelWFH.Child as ZedGraphControl;
-            ZedGraphControl VejbZedGraph = VejbWFH.Child as ZedGraphControl;
-            ZedGraphControl NormZedGraph = NormWFH.Child as ZedGraphControl;
-            ZedGraphControl ShortNormZedGraph = ShortNormWFH.Child as ZedGraphControl;
-            GraphPane pane = ExpZedGraph.GraphPane;
+            var expZedGraph = (ZedGraphControl)ExpWFH.Child;
+            var erlZedGraph = (ZedGraphControl)ErlWFH.Child;
+            var relZedGraph = (ZedGraphControl)RelWFH.Child;
+            var vejbZedGraph = (ZedGraphControl)VejbWFH.Child;
+            var normZedGraph = (ZedGraphControl)NormWFH.Child;
+            var shortNormZedGraph = (ZedGraphControl)ShortNormWFH.Child;
+            
+            var pane = expZedGraph.GraphPane;
             pane.CurveList.Clear();
-            pane = ErlZedGraph.GraphPane;
+            pane = erlZedGraph.GraphPane;
             pane.CurveList.Clear();
-            pane = RelZedGraph.GraphPane;
+            pane = relZedGraph.GraphPane;
             pane.CurveList.Clear();
-            pane = VejbZedGraph.GraphPane;
+            pane = vejbZedGraph.GraphPane;
             pane.CurveList.Clear();
-            pane = NormZedGraph.GraphPane;
+            pane = normZedGraph.GraphPane;
             pane.CurveList.Clear();
-            pane = ShortNormZedGraph.GraphPane;
+            pane = shortNormZedGraph.GraphPane;
             pane.CurveList.Clear();
 
 
@@ -1316,57 +1346,55 @@ sqr = Math.Sqrt(sqr)*/
             DD6Label.Content = "D6 = ";
             DD6Label.Foreground = Brushes.Black;
             
-            AnswDLabel.Content = "";
-            AnswLowLabel.Content = "";
+            AnswDLabel.Content = string.Empty;
+            AnswLowLabel.Content = string.Empty;
 
-            A11Label.Content = "";
-            A12Label.Content = "";
-            A13Label.Content = "";
-            A21Label.Content = "";
-            A22Label.Content = "";
-            A23Label.Content = "";
-            A31Label.Content = "";
-            A32Label.Content = "";
-            A33Label.Content = "";
-            A34Label.Content = "";
-            T52Label.Content = "";
-            Q52Label.Content = "";
-            T53Label.Content = "";
-            Q53Label.Content = "";
-            T54Label.Content = "";
-            Q54Label.Content = "";
-            T6Label.Content = "";
-            Q6Label.Content = "";
-            ALabel.Content = "";
-            BLabel.Content = "";
+            A11Label.Content = string.Empty;
+            A12Label.Content = string.Empty;
+            A13Label.Content = string.Empty;
+            A21Label.Content = string.Empty;
+            A22Label.Content = string.Empty;
+            A23Label.Content = string.Empty;
+            A31Label.Content = string.Empty;
+            A32Label.Content = string.Empty;
+            A33Label.Content = string.Empty;
+            A34Label.Content = string.Empty;
+            T52Label.Content = string.Empty;
+            Q52Label.Content = string.Empty;
+            T53Label.Content = string.Empty;
+            Q53Label.Content = string.Empty;
+            T54Label.Content = string.Empty;
+            Q54Label.Content = string.Empty;
+            T6Label.Content = string.Empty;
+            Q6Label.Content = string.Empty;
+            ALabel.Content = string.Empty;
+            BLabel.Content = string.Empty;
         }
 
-        bool Analys()
+        private bool Analys()
         {
             //if count <3
-            int count = ResCol.Count;
-            double[] mas = new double[count];
+            int count = _resultCollection.Count;
+            
+            var mas = new double[count];
             for (int i = 0; i < count; i++)
             {
-                mas[i] = ResCol[i].ni;
+                mas[i] = _resultCollection[i].Ni;
             }
             
-            double[] mas1 = new double[count / 3];
+            var mas1 = new double[count / 3];
             for (int i = 0; i < count / 3; i++)
             {
                 mas1[i] = mas[i];
             }
 
-            double[] mas2 = new double[count / 3];
+            var mas2 = new double[count / 3];
             for (int i = 0; i < count / 3; i++)
             {
                 mas2[i] = mas[i + count / 3];
             }
 
-            if (mas1.Sum() > mas2.Sum())
-                return true;
-            else
-                return false;
+            return mas1.Sum() > mas2.Sum();
         }
     }
 }

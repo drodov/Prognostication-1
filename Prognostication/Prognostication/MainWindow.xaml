@@ -19,10 +19,11 @@
                     </StackPanel>
                     <DataGrid AutoGenerateColumns="False" Width="448" Height="Auto" MinHeight="390" HorizontalAlignment="Left" Margin="15,80,0,0" Name="dataGrid1" VerticalAlignment="Top" CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="i" IsReadOnly="True" Width="200" Binding="{Binding Path=i, Mode=TwoWay}"/>
-                            <DataGridTextColumn Header="[ni]" Width="200" Binding="{Binding Path=ni, Mode=TwoWay}" IsReadOnly="False" />
+                            <DataGridTextColumn Header="i" IsReadOnly="True" Width="200" Binding="{Binding Path=I, Mode=TwoWay}"/>
+                            <DataGridTextColumn Header="[ni]" Width="200" Binding="{Binding Path=Ni, Mode=TwoWay}" IsReadOnly="False" />
                         </DataGrid.Columns>
                     </DataGrid>
+
                 </Grid>
             </TabItem>
             <TabItem Header="Экспоненциальный" Name="ExpTabItem">
