@@ -13,14 +13,18 @@ namespace Prognostication
     /// </summary>
     public partial class MainWindow : Window
     {
-        double _delta = 0.0001;
-        Int32 K, N0 = 100;
-        double[] P;
-        double dt, M1, M2, S;
-        double[] D = new double[16];  // D*
-        double[] DD = new double[16]; // D
-        ObservableCollection<Results> _resultCollection = new ObservableCollection<Results>();
-        ObservableCollection<Results> _tempResultCollection;
+        private double _delta = 0.0001;
+        private int K;
+        private const int N0 = 100;
+        private double[] P;
+        private double dt;
+        private double M1;
+        private double M2;
+        private double S;
+        private double[] D = new double[16];  // D*
+        private double[] DD = new double[16]; // D
+        private ObservableCollection<Results> _resultCollection = new ObservableCollection<Results>();
+        private readonly ObservableCollection<Results> _tempResultCollection = new ObservableCollection<Results>();
 
         public MainWindow()
         {
@@ -67,9 +71,21 @@ namespace Prognostication
                 return;
             }
 
-            _tempResultCollection = _resultCollection;
+            // save old items
+            for (int i = 0; i < _resultCollection.Count && i < 500; i++ )
+            {
+                if(i < _tempResultCollection.Count)
+                {
+                    _tempResultCollection[i] = _resultCollection[i];
+                }
+                else
+                {
+                    _tempResultCollection.Add(_resultCollection[i]);
+                }
+            }
+
+            // new items
             _resultCollection = new ObservableCollection<Results>();
-            // _resultCollection.Clear();
             for (int i = 1; i <= K; i++)
             {
                 _resultCollection.Add(_tempResultCollection.Count >= i
@@ -339,10 +355,10 @@ namespace Prognostication
 
         private void DrawRelGraphics()
         {
-            double t, a1, a2, a3 = 0, a4;
-            a1 = Math.PI / 4 / M1 / M1;
-            a2 = 1.0 / M2;
-            a4 = 1.0 / (K * dt * dt) * (_resultCollection[K - 1].Ni / CountNi(K - 1) - _resultCollection[0].Ni / (N0 + CountNi(1)));
+            double a3 = 0;
+            double a1 = Math.PI / 4 / M1 / M1;
+            double a2 = 1.0 / M2;
+            double a4 = 1.0 / (K * dt * dt) * (_resultCollection[K - 1].Ni / CountNi(K - 1) - _resultCollection[0].Ni / (N0 + CountNi(1)));
             for (int i = 0; i < K; i++)
             {
                 a3 += _resultCollection[i].Ni * (i + 1 - 0.5) / (CountNi(i) + CountNi(i + 1));
@@ -359,7 +375,7 @@ namespace Prognostication
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                t = (_resultCollection[i].I - 0.5) * dt;
+                double t = (_resultCollection[i].I - 0.5) * dt;
                 list0.Add(t, P[i]);
                 list1.Add(t, FuncLowRel(a1, t));
                 list2.Add(t, FuncLowRel(a2, t));
@@ -427,7 +443,7 @@ namespace Prognostication
 
         private void DrawVejbGraphics()
         {
-            double t, x, y, a = 0, b = 0, c = 0, e = 0;
+            double a = 0, b = 0, c = 0, e = 0;
             for (int i = 0; i < K; i++)
             {
                 a += Math.Log(CountLambda(i)); // i+1
@@ -435,8 +451,8 @@ namespace Prognostication
                 c += Math.Pow(Math.Log(i + 1 - 0.5) + Math.Log(dt), 2);
                 e += Math.Log(CountLambda(i)) * (Math.Log(i + 1 - 0.5) + Math.Log(dt));
             }
-            x = (a * c - b * e) / (K * c - b * b);
-            y = (a * b - K * e) / (b * b - K * c);
+            double x = (a * c - b * e) / (K * c - b * b);
+            double y = (a * b - K * e) / (b * b - K * c);
             double B = 1 + y;
             double A = Math.Exp(x) / B;
             var VejbZedGraph = (ZedGraphControl)VejbWFH.Child;
@@ -447,7 +463,7 @@ namespace Prognostication
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                t = (_resultCollection[i].I - 0.5) * dt;
+                double t = (_resultCollection[i].I - 0.5) * dt;
                 list0.Add(t, P[i]);
                 list1.Add(t, FuncLowVejb(A, B, t));
             }
@@ -476,33 +492,33 @@ namespace Prognostication
 
         private void DrawNormGraphics()
         {
-            double t, T1, T2, T3, T4, q1, q2, q3, q4, a, b = 0, g = 1, Y, X;
-            a = Math.Log(CountF(1) / CountF(K));
+            double T2, T3, q2, b = 0, g = 1;
+            double a = Math.Log(CountF(1) / CountF(K));
             for (int i = 1; i <= K - 1; i++)
             {
                 b += Math.Pow(Math.Log(CountF(i) / CountF(i + 1)), 2);
                 g *= Math.Pow(CountF(i) / CountF(i + 1), i);
             }
             g = Math.Log(g);
-            Y = (K - 1) * (0.5 * K * a - g) / (a * a - b * (K - 1));
-            X = (0.5 * K * b * (K - 1) - g * a) / (b * (K - 1) - a * a);
-            T4 = X * dt;
-            q4 = Math.Sqrt(Y) * dt;
-            T1 = T2 = T3 = M1;
-            q1 = q2 = S;
-            q3 = q1 * Math.Sqrt(2);
-            ZedGraphControl normZedGraph = (ZedGraphControl)NormWFH.Child;
+            double Y = (K - 1) * (0.5 * K * a - g) / (a * a - b * (K - 1));
+            double X = (0.5 * K * b * (K - 1) - g * a) / (b * (K - 1) - a * a);
+            double T4 = X * dt;
+            double q4 = Math.Sqrt(Y) * dt;
+            double T1 = T2 = T3 = M1;
+            double q1 = q2 = S;
+            double q3 = q1 * Math.Sqrt(2);
+            var normZedGraph = (ZedGraphControl)NormWFH.Child;
             GraphPane pane = normZedGraph.GraphPane;
             pane.CurveList.Clear();
             var list0 = new PointPairList();
             var list1 = new PointPairList();
-            var list2 = new PointPairList();
+            // var list2 = new PointPairList();
             var list3 = new PointPairList();
             var list4 = new PointPairList();
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                t = (_resultCollection[i].I - 0.5) * dt;
+                double t = (_resultCollection[i].I - 0.5) * dt;
                 list0.Add(t, P[i]);
                 list1.Add(t, FuncLowNorm(T1, q1, t));
                 //                list2.Add(t, FuncLowNorm(T2, q2, t));
@@ -568,20 +584,20 @@ namespace Prognostication
 
         private void DrawShortNormGraphics()
         {
-            double t, C, T, q, a, b = 0, g = 1, Y, X;
-            a = Math.Log(CountF(1) / CountF(K));
+            double b = 0, g = 1;
+            double a = Math.Log(CountF(1) / CountF(K));
             for (int i = 1; i < K; i++)
             {
                 b += Math.Pow(Math.Log(CountF(i) / CountF(i + 1)), 2);
                 g *= Math.Pow(CountF(i) / CountF(i + 1), i);
             }
             g = Math.Log(g);
-            Y = (K - 1) * (0.5 * K * a - g) / (a * a - b * (K - 1));
-            X = (0.5 * K * b * (K - 1) - g * a) / (b * (K - 1) - a * a);
-            T = X * dt;
-            q = Math.Sqrt(Y) * dt;
-            C = 1.0 / (0.5 + FLaplas(T / q));
-            ZedGraphControl shortNormZedGraph = (ZedGraphControl)ShortNormWFH.Child;
+            double Y = (K - 1) * (0.5 * K * a - g) / (a * a - b * (K - 1));
+            double X = (0.5 * K * b * (K - 1) - g * a) / (b * (K - 1) - a * a);
+            double T = X * dt;
+            double q = Math.Sqrt(Y) * dt;
+            double C = 1.0 / (0.5 + FLaplas(T / q));
+            var shortNormZedGraph = (ZedGraphControl)ShortNormWFH.Child;
             GraphPane pane = shortNormZedGraph.GraphPane;
             pane.CurveList.Clear();
             var list0 = new PointPairList();
@@ -589,7 +605,7 @@ namespace Prognostication
             // Заполняем список точек
             for (int i = 0; i < K; i++)
             {
-                t = (_resultCollection[i].I - 0.5) * dt;
+                double t = (_resultCollection[i].I - 0.5) * dt;
                 list0.Add(t, P[i]);
                 list1.Add(t, FuncLowShortNorm(T, q, t, C));
             }
@@ -751,7 +767,7 @@ namespace Prognostication
             return D;*/
         }
 
-        double CountDVejb(double a, double b)
+        private double CountDVejb(double a, double b)
         {
             double D = 0;
             for (int i = 1; i <= K; i++)
@@ -780,7 +796,7 @@ namespace Prognostication
             return D;*/
         }
 
-        double CountDNorm(double q, double T)
+        private double CountDNorm(double q, double T)
         {
             double D = 0;
             for (int i = 1; i <= K; i++)
@@ -809,7 +825,7 @@ namespace Prognostication
             return D;*/
         }
 
-        double CountDShortNorm(double q, double T, double C)
+        private double CountDShortNorm(double q, double T, double C)
         {
             double D = 0;
             for (int i = 1; i <= K; i++)
@@ -839,7 +855,7 @@ namespace Prognostication
             return D;*/
         }
 
-        double CountDDExp(double a)
+        private double CountDDExp(double a)
         {
             double D = 0;
             for (int i = 1; i <= K; i++)
@@ -855,7 +871,7 @@ namespace Prognostication
             return D;
         }
 
-        double CountDDErl(double a)
+        private double CountDDErl(double a)
         {
             double D = 0;
             for (int i = 1; i <= K; i++)
@@ -871,7 +887,7 @@ namespace Prognostication
             return D;
         }
 
-        double CountDDRel(double a)
+        private double CountDDRel(double a)
         {
             double D = 0;
             for (int i = 1; i <= K; i++)
@@ -887,7 +903,7 @@ namespace Prognostication
             return D;
         }
 
-        double CountDDVejb(double a, double b)
+        private double CountDDVejb(double a, double b)
         {
             double D = 0;
             for (int i = 1; i <= K; i++)
@@ -903,7 +919,7 @@ namespace Prognostication
             return D;
         }
 
-        double CountDDNorm(double q, double T)
+        private double CountDDNorm(double q, double T)
         {
             double D = 0;
             for (int i = 1; i <= K; i++)
@@ -919,7 +935,7 @@ namespace Prognostication
             return D;
         }
 
-        double CountDDShortNorm(double q, double T, double C)
+        private double CountDDShortNorm(double q, double T, double C)
         {
             double D = 0;
             for (int i = 1; i <= K; i++)
@@ -935,7 +951,7 @@ namespace Prognostication
             return D;
         }
 
-        void ShowD()
+        private void ShowD()
         {
             string ans = string.Empty;
             double min = D.Min();
